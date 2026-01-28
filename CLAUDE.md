@@ -63,6 +63,7 @@ Single `profiles` table linked to Supabase auth. Key fields:
 - No notifications
 - Functional > beautiful
 - Keep it simple - this is an MVP
+- **Never commit or hardcode API keys** - all secrets go in `.env.local` (gitignored). Use `process.env.NEXT_PUBLIC_SUPABASE_URL` etc. in code
 
 ## Running Locally
 
@@ -77,5 +78,5 @@ npm run dev
 
 Before running, you need:
 1. Create Supabase project
-2. Run the database schema (see notes.md for SQL)
+2. Run the database schema (see README.md for SQL)
 3. Add URL and anon key to `.env.local`
