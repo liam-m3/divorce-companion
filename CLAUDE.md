@@ -52,7 +52,7 @@ Single `profiles` table linked to Supabase auth. Key fields:
 3. ~~Onboarding (5-step flow)~~ DONE
 4. ~~Dashboard (adaptive content)~~ DONE
 5. ~~Profile (edit page)~~ DONE
-6. Polish (loading states, errors)
+6. ~~Polish (loading states, errors)~~ DONE
 7. Deploy to Vercel
 
 ## Rules
