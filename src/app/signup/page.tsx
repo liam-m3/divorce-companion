@@ -50,7 +50,8 @@ export default function SignupPage() {
         return;
       }
 
-      // Redirect to onboarding after successful signup
+      // Refresh to update session, then redirect to onboarding
+      router.refresh();
       router.push('/onboarding');
     } catch {
       setError('An unexpected error occurred');

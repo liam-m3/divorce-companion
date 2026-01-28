@@ -47,6 +47,8 @@ export default function LoginPage() {
           .eq('id', user.id)
           .single();
 
+        // Refresh to update session, then redirect
+        router.refresh();
         if (profile?.onboarding_completed) {
           router.push('/dashboard');
         } else {
