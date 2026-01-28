@@ -48,10 +48,10 @@ Single `profiles` table linked to Supabase auth. Key fields:
 ## Development Order
 
 1. ~~Setup (types, Supabase, config)~~ DONE
-2. Auth (signup, login pages)
-3. Onboarding (5-step flow)
-4. Dashboard (adaptive content)
-5. Profile (edit page)
+2. ~~Auth (signup, login pages)~~ DONE
+3. ~~Onboarding (5-step flow)~~ DONE
+4. ~~Dashboard (adaptive content)~~ DONE
+5. ~~Profile (edit page)~~ DONE
 6. Polish (loading states, errors)
 7. Deploy to Vercel
 
