@@ -60,3 +60,97 @@ export interface ContentBlock {
   title: string;
   content: string | ChecklistItem[];
 }
+
+// Journal types
+export const MOODS = [
+  'calm',
+  'anxious',
+  'angry',
+  'sad',
+  'overwhelmed',
+  'hopeful',
+  'frustrated',
+  'relieved'
+] as const;
+
+export type Mood = typeof MOODS[number];
+
+export const JOURNAL_CATEGORIES = [
+  'legal',
+  'financial',
+  'children',
+  'housing',
+  'emotional',
+  'communication',
+  'other'
+] as const;
+
+export type JournalCategory = typeof JOURNAL_CATEGORIES[number];
+
+export interface JournalEntry {
+  id: string;
+  user_id: string;
+  title: string | null;
+  content: string;
+  mood: Mood | null;
+  category: JournalCategory | null;
+  incident_date: string;
+  ai_summary: string | null;
+  ai_summary_generated_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// Document types
+export const DOCUMENT_CATEGORIES = [
+  'legal',
+  'financial',
+  'personal',
+  'correspondence',
+  'court',
+  'other'
+] as const;
+
+export type DocumentCategory = typeof DOCUMENT_CATEGORIES[number];
+
+export interface Document {
+  id: string;
+  user_id: string;
+  file_name: string;
+  file_path: string;
+  file_size: number | null;
+  mime_type: string | null;
+  category: DocumentCategory | null;
+  notes: string | null;
+  uploaded_at: string;
+}
+
+// Financial types
+export const FINANCIAL_TYPES = [
+  'asset',
+  'debt',
+  'income',
+  'expense'
+] as const;
+
+export type FinancialType = typeof FINANCIAL_TYPES[number];
+
+export const FREQUENCY_OPTIONS = [
+  'one_time',
+  'monthly',
+  'annually'
+] as const;
+
+export type Frequency = typeof FREQUENCY_OPTIONS[number];
+
+export interface FinancialItem {
+  id: string;
+  user_id: string;
+  type: FinancialType;
+  name: string;
+  amount: number;
+  frequency: Frequency | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
