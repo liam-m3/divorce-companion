@@ -36,6 +36,7 @@ src/
 │   │       └── edit/page.tsx           # Edit entry
 │   ├── vault/page.tsx                  # Document vault
 │   ├── finances/page.tsx               # Financial tracker
+│   ├── timeline/page.tsx               # Timeline with chronological events
 │   └── api/journal/summarise/route.ts  # AI summary API endpoint
 │
 ├── components/
@@ -174,6 +175,18 @@ The middleware (`middleware.ts`) handles:
 | notes | text | Optional notes |
 | created_at | timestamptz | Creation time |
 | updated_at | timestamptz | Last update time |
+
+### Table: `timeline_events`
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid | Primary key |
+| user_id | uuid | FK to profiles.id |
+| title | text | Event title (required) |
+| description | text | Optional details |
+| event_date | date | When the event occurred (required) |
+| category | text | legal, financial, personal, emotional, children |
+| created_at | timestamptz | Creation time |
 
 ### Row Level Security
 

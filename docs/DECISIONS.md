@@ -135,9 +135,19 @@ This document records key technical decisions made during development.
 - Single page reduces navigation overhead for quick data entry
 - Follows established vault pattern for consistency
 
+### 14. Timeline as Single Page with Year Grouping
+
+**Decision:** Build the timeline as a single-page design (`/timeline`) with events grouped by year and a visual timeline line, following the vault/finances single-page pattern
+
+**Reason:**
+- Timeline events are simple CRUD — title, date, category, description
+- Visual timeline with vertical line and coloured dots by category adds clarity
+- Year grouping gives natural structure without separate pages
+- Inline edit/delete follows established vault/finances pattern
+- Original spec had separate `/timeline/new` and `/timeline/[id]/edit` pages, but single-page is more consistent with the rest of the app
+
 ## Future Considerations
 
-- **Timeline:** Consider combining with journal entries for a unified chronological view.
 - **Full Brief Generator:** Will need to handle large context windows — may need to summarise individual sources before bundling into final prompt.
 - **Email notifications:** Evaluate Supabase Edge Functions vs external service.
 - **Multi-language:** Consider i18n library (next-intl or similar) when ready.
