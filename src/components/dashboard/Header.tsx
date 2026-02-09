@@ -40,6 +40,12 @@ export default function Header() {
             Finances
           </Link>
           <Link
+            href="/timeline"
+            className="text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
+          >
+            Timeline
+          </Link>
+          <Link
             href="/profile"
             className="text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
           >
