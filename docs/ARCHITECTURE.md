@@ -37,7 +37,10 @@ src/
 │   ├── vault/page.tsx                  # Document vault
 │   ├── finances/page.tsx               # Financial tracker
 │   ├── timeline/page.tsx               # Timeline with chronological events
-│   └── api/journal/summarise/route.ts  # AI summary API endpoint
+│   ├── brief/page.tsx                  # Full situation brief generator
+│   └── api/
+│       ├── journal/summarise/route.ts  # AI journal summary endpoint
+│       └── brief/generate/route.ts     # AI full brief endpoint
 │
 ├── components/
 │   ├── ui/                             # Reusable UI primitives
