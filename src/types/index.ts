@@ -154,3 +154,24 @@ export interface FinancialItem {
   created_at: string;
   updated_at: string;
 }
+
+// Timeline types
+export const TIMELINE_CATEGORIES = [
+  'legal',
+  'financial',
+  'personal',
+  'emotional',
+  'children'
+] as const;
+
+export type TimelineCategory = typeof TIMELINE_CATEGORIES[number];
+
+export interface TimelineEvent {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string | null;
+  event_date: string;
+  category: TimelineCategory | null;
+  created_at: string;
+}
