@@ -1,21 +1,66 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import type { ChecklistItem } from '@/types';
 
 interface ChecklistProps {
   title: string;
+  checklistId: string;
   items: ChecklistItem[];
 }
 
-export default function Checklist({ title, items: initialItems }: ChecklistProps) {
-  // Local state only - not persisted in MVP
+export default function Checklist({ title, checklistId, items: initialItems }: ChecklistProps) {
+  const supabase = createClient();
   const [items, setItems] = useState(initialItems);
+  const [loaded, setLoaded] = useState(false);
 
-  const toggleItem = (id: string) => {
-    setItems(items.map(item =>
+  // Load saved progress on mount
+  useEffect(() => {
+    async function loadProgress() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data } = await supabase
+        .from('checklist_progress')
+        .select('completed_items')
+        .eq('user_id', user.id)
+        .eq('checklist_id', checklistId)
+        .single();
+
+      if (data?.completed_items) {
+        setItems(initialItems.map(item => ({
+          ...item,
+          completed: data.completed_items.includes(item.id),
+        })));
+      }
+      setLoaded(true);
+    }
+
+    loadProgress();
+  }, [checklistId]);
+
+  const toggleItem = async (id: string) => {
+    const updated = items.map(item =>
       item.id === id ? { ...item, completed: !item.completed } : item
-    ));
+    );
+    setItems(updated);
+
+    const completedIds = updated.filter(i => i.completed).map(i => i.id);
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    await supabase
+      .from('checklist_progress')
+      .upsert({
+        user_id: user.id,
+        checklist_id: checklistId,
+        completed_items: completedIds,
+        updated_at: new Date().toISOString(),
+      }, {
+        onConflict: 'user_id,checklist_id',
+      });
   };
 
   const completedCount = items.filter(item => item.completed).length;
@@ -28,7 +73,7 @@ export default function Checklist({ title, items: initialItems }: ChecklistProps
           {completedCount}/{items.length}
         </span>
       </div>
-      <ul className="space-y-2">
+      <ul className={`space-y-2 ${!loaded ? 'opacity-50' : ''}`}>
         {items.map(item => (
           <li key={item.id}>
             <label className="flex items-start gap-3 cursor-pointer group">
@@ -36,6 +81,7 @@ export default function Checklist({ title, items: initialItems }: ChecklistProps
                 type="checkbox"
                 checked={item.completed}
                 onChange={() => toggleItem(item.id)}
+                disabled={!loaded}
                 className="mt-0.5 h-5 w-5 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500"
               />
               <span

@@ -16,6 +16,7 @@ export default function ContentBlock({ block }: ContentBlockProps) {
       return (
         <Checklist
           title={block.title}
+          checklistId={block.id}
           items={block.content as ChecklistItem[]}
         />
       );
