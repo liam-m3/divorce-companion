@@ -81,10 +81,49 @@
 
 ---
 
-## Phase 3 (Future)
+## Phase 3: Polish & UX Improvements — IN PROGRESS
+
+Based on a full screenshot audit of all 12 pages (desktop + mobile). Prioritised by user impact.
+
+### Priority 1 — Critical Mobile Fixes — DONE
+- [x] Mobile hamburger nav menu (Header.tsx — affects all authenticated pages)
+- [x] Page header layouts on mobile (title + action button stacking for journal, vault, finances, timeline)
+- [x] Vault file card layout on mobile (filename truncation, action button cramming)
+- [x] Finance summary cards on mobile (cramped 2-col grid, number overflow)
+
+### Priority 2 — Essential UX & Trust — IN PROGRESS (4/6)
+- [x] Forgot password flow (new `/forgot-password` + `/reset-password` pages)
+- [x] Password visibility toggle (auto eye icon on all password inputs)
+- [x] Display name on profile + personalised "Welcome back, [name]" on dashboard
+- [x] Landing page feature breakdown (5 feature cards with icons below CTA)
+- [ ] Journal auto-save drafts (localStorage with debounce + recovery banner)
+- [ ] Onboarding: full-width Next button on mobile, Back button, Skip option
+
+### Priority 3 — Feature Enhancements
+- [ ] Currency formatting based on profile country (country-to-currency map)
+- [ ] Timeline colour legend (dot + label for each category)
+- [ ] Brief: output preview description + saved history (DB migration: `briefs` table)
+- [ ] Vault: file type badges (PDF, IMG, DOC, TXT based on mime_type)
+- [ ] Journal: writing prompts for blank textarea
+- [ ] Dashboard: recent activity summary card (this week's entries, uploads, upcoming events)
+- [ ] Replace "Expense Tracker — Coming Soon" placeholder with Financial Tracker link
+
+### Priority 4 — Nice to Have
+- [ ] Vault: overflow menu ("...") for actions on mobile
+- [ ] Timeline: future events with "upcoming" visual treatment
+- [ ] Journal: larger textarea on mobile (min-h-[300px])
+- [ ] Profile: change password + delete account sections
+- [ ] Signup: privacy/trust note below Create Account button
+
+### DB Migrations Required (Phase 3)
+1. `display_name TEXT` column on `profiles` table
+2. `briefs` table: id UUID PK, user_id UUID FK, content TEXT, generated_at TIMESTAMPTZ + RLS
+
+---
+
+## Phase 4 (Future)
 
 ### Enhanced Journal
-- Auto-save drafts to localStorage
 - Pattern detection across entries
 - Entry templates for common situations
 - Voice-to-text input
@@ -109,7 +148,7 @@
 - Multi-language support (i18n)
 - Email notifications / reminders
 - Calendar integration (court dates, deadlines)
-- Mobile responsiveness polish
+- Dark mode toggle
 
 ---
 
