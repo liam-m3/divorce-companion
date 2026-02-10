@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -9,6 +9,37 @@ import Button from '@/components/ui/Button';
 import MoodPicker from '@/components/journal/MoodPicker';
 import CategoryPicker from '@/components/journal/CategoryPicker';
 import type { Mood, JournalCategory } from '@/types';
+
+const DRAFT_KEY = 'divorce-companion-journal-draft';
+
+interface Draft {
+  content: string;
+  title: string;
+  mood: Mood | null;
+  category: JournalCategory | null;
+  incidentDate: string;
+  savedAt: number;
+}
+
+function loadDraft(): Draft | null {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    const draft = JSON.parse(raw) as Draft;
+    // Discard drafts older than 7 days
+    if (Date.now() - draft.savedAt > 7 * 24 * 60 * 60 * 1000) {
+      localStorage.removeItem(DRAFT_KEY);
+      return null;
+    }
+    return draft;
+  } catch {
+    return null;
+  }
+}
+
+function clearDraft() {
+  localStorage.removeItem(DRAFT_KEY);
+}
 
 export default function NewEntryPage() {
   const router = useRouter();
@@ -24,6 +55,66 @@ export default function NewEntryPage() {
   const [showDetails, setShowDetails] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [draftFound, setDraftFound] = useState(false);
+
+  // Auto-save debounce ref
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasLoadedDraft = useRef(false);
+
+  // Check for existing draft on mount
+  useEffect(() => {
+    const draft = loadDraft();
+    if (draft && (draft.content || draft.title)) {
+      setDraftFound(true);
+    }
+    hasLoadedDraft.current = true;
+  }, []);
+
+  // Auto-save to localStorage (debounced 1s)
+  const saveDraft = useCallback(() => {
+    if (!hasLoadedDraft.current) return;
+    const draft: Draft = {
+      content,
+      title,
+      mood,
+      category,
+      incidentDate,
+      savedAt: Date.now(),
+    };
+    // Only save if there's actual content
+    if (content.trim() || title.trim()) {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    }
+  }, [content, title, mood, category, incidentDate]);
+
+  useEffect(() => {
+    if (!hasLoadedDraft.current || draftFound) return;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(saveDraft, 1000);
+    return () => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+    };
+  }, [saveDraft, draftFound]);
+
+  const restoreDraft = () => {
+    const draft = loadDraft();
+    if (draft) {
+      setContent(draft.content);
+      setTitle(draft.title);
+      setMood(draft.mood);
+      setCategory(draft.category);
+      setIncidentDate(draft.incidentDate);
+      if (draft.title || draft.mood || draft.category) {
+        setShowDetails(true);
+      }
+    }
+    setDraftFound(false);
+  };
+
+  const discardDraft = () => {
+    clearDraft();
+    setDraftFound(false);
+  };
 
   const handleSave = async () => {
     if (!content.trim()) {
@@ -59,6 +150,7 @@ export default function NewEntryPage() {
       return;
     }
 
+    clearDraft();
     router.push(`/journal/${data.id}`);
   };
 
@@ -75,6 +167,30 @@ export default function NewEntryPage() {
             Write freely. Don&apos;t worry about grammar or structure.
           </p>
         </div>
+
+        {draftFound && (
+          <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
+            <p className="text-sm text-amber-800 dark:text-amber-200">
+              You have an unsaved draft from a previous session.
+            </p>
+            <div className="flex gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={restoreDraft}
+                className="px-3 py-1.5 text-sm font-medium rounded-lg bg-amber-600 text-white hover:bg-amber-700 transition-colors"
+              >
+                Resume
+              </button>
+              <button
+                type="button"
+                onClick={discardDraft}
+                className="px-3 py-1.5 text-sm font-medium rounded-lg border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
+              >
+                Discard
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm p-6">
           <textarea
