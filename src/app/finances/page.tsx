@@ -8,6 +8,7 @@ import Button from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { FINANCIAL_TYPES, FREQUENCY_OPTIONS } from '@/types';
 import type { FinancialItem, FinancialType, Frequency } from '@/types';
+import { getCurrencyConfig, type CurrencyConfig } from '@/lib/currency';
 
 const TYPE_LABELS: Record<FinancialType, string> = {
   asset: 'Asset',
@@ -29,14 +30,6 @@ const FREQUENCY_LABELS: Record<Frequency, string> = {
   annually: 'Annually',
 };
 
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-  }).format(amount);
-}
-
 export default function FinancesPage() {
   const router = useRouter();
   const supabase = createClient();
@@ -48,6 +41,7 @@ export default function FinancesPage() {
   const [search, setSearch] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   const [error, setError] = useState('');
+  const [currencyConfig, setCurrencyConfig] = useState<CurrencyConfig>(getCurrencyConfig(null));
 
   // Add form state
   const [newType, setNewType] = useState<FinancialType>('asset');
@@ -55,6 +49,30 @@ export default function FinancesPage() {
   const [newAmount, setNewAmount] = useState('');
   const [newFrequency, setNewFrequency] = useState<Frequency | ''>('');
   const [newNotes, setNewNotes] = useState('');
+
+  const formatAmount = (amount: number) => {
+    return new Intl.NumberFormat(currencyConfig.locale, {
+      style: 'currency',
+      currency: currencyConfig.currency,
+      minimumFractionDigits: 2,
+    }).format(amount);
+  };
+
+  useEffect(() => {
+    async function fetchProfile() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from('profiles')
+        .select('country')
+        .eq('id', user.id)
+        .single();
+      if (data?.country) {
+        setCurrencyConfig(getCurrencyConfig(data.country));
+      }
+    }
+    fetchProfile();
+  }, []);
 
   useEffect(() => {
     fetchItems();
@@ -203,14 +221,14 @@ export default function FinancesPage() {
         {!loading && items.length > 0 && !typeFilter && !search && (
           <div className="mb-6 space-y-3">
             <div className="grid grid-cols-3 gap-3">
-              <SummaryCard label="Total Assets" amount={totalAssets} color="text-emerald-600 dark:text-emerald-400" />
-              <SummaryCard label="Total Debts" amount={totalDebts} color="text-red-600 dark:text-red-400" />
-              <SummaryCard label="Net Worth" amount={netWorth} color={netWorth >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'} />
+              <SummaryCard label="Total Assets" amount={totalAssets} color="text-emerald-600 dark:text-emerald-400" formatAmount={formatAmount} />
+              <SummaryCard label="Total Debts" amount={totalDebts} color="text-red-600 dark:text-red-400" formatAmount={formatAmount} />
+              <SummaryCard label="Net Worth" amount={netWorth} color={netWorth >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'} formatAmount={formatAmount} />
             </div>
             <div className="grid grid-cols-3 gap-3">
-              <SummaryCard label="Monthly Income" amount={monthlyIncome} color="text-blue-600 dark:text-blue-400" />
-              <SummaryCard label="Monthly Expenses" amount={monthlyExpenses} color="text-amber-600 dark:text-amber-400" />
-              <SummaryCard label="Monthly Net" amount={monthlyNet} color={monthlyNet >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'} />
+              <SummaryCard label="Monthly Income" amount={monthlyIncome} color="text-blue-600 dark:text-blue-400" formatAmount={formatAmount} />
+              <SummaryCard label="Monthly Expenses" amount={monthlyExpenses} color="text-amber-600 dark:text-amber-400" formatAmount={formatAmount} />
+              <SummaryCard label="Monthly Net" amount={monthlyNet} color={monthlyNet >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'} formatAmount={formatAmount} />
             </div>
           </div>
         )}
@@ -255,7 +273,7 @@ export default function FinancesPage() {
 
               <div>
                 <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                  Amount ($)
+                  Amount ({currencyConfig.symbol})
                 </label>
                 <input
                   type="number"
@@ -369,6 +387,8 @@ export default function FinancesPage() {
                 item={item}
                 onDelete={handleDelete}
                 onUpdate={handleUpdate}
+                formatAmount={formatAmount}
+                currencySymbol={currencyConfig.symbol}
               />
             ))}
           </div>
@@ -378,12 +398,12 @@ export default function FinancesPage() {
   );
 }
 
-function SummaryCard({ label, amount, color }: { label: string; amount: number; color: string }) {
+function SummaryCard({ label, amount, color, formatAmount }: { label: string; amount: number; color: string; formatAmount: (n: number) => string }) {
   return (
     <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm p-3 sm:p-4">
       <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1 truncate">{label}</p>
       <p className={`text-sm sm:text-lg font-bold ${color} truncate`}>
-        {formatCurrency(amount)}
+        {formatAmount(amount)}
       </p>
     </div>
   );
@@ -393,10 +413,14 @@ function FinancialItemCard({
   item,
   onDelete,
   onUpdate,
+  formatAmount,
+  currencySymbol,
 }: {
   item: FinancialItem;
   onDelete: (id: string) => void;
   onUpdate: (id: string, updates: Partial<Pick<FinancialItem, 'type' | 'name' | 'amount' | 'frequency' | 'notes'>>) => void;
+  formatAmount: (n: number) => string;
+  currencySymbol: string;
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -459,7 +483,7 @@ function FinancialItemCard({
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">Amount ($)</label>
+            <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">Amount ({currencySymbol})</label>
             <input
               type="number"
               value={editAmount}
@@ -526,7 +550,7 @@ function FinancialItemCard({
                 ? 'text-emerald-600 dark:text-emerald-400'
                 : 'text-red-600 dark:text-red-400'
             }`}>
-              {formatCurrency(Number(item.amount))}
+              {formatAmount(Number(item.amount))}
             </span>
             {item.frequency && (
               <span className="text-xs text-zinc-500 dark:text-zinc-400">
