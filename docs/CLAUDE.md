@@ -81,7 +81,7 @@ Over time, user fills in everything — journal entries, documents, finances, ti
 | P3 | Timeline colour legend | DONE |
 | P3 | Brief preview + history | TODO |
 | P3 | Vault file type badges | DONE |
-| P3 | Journal writing prompts | TODO |
+| P3 | Journal writing prompts | DONE |
 | P3 | Dashboard recent activity | TODO |
 | P3 | Replace expense placeholder | TODO |
 
@@ -558,7 +558,7 @@ npm run dev
 
 Full screenshot audit completed across all 12 pages (desktop + mobile). Working through prioritised fixes on branch `feat/phase3-polish`.
 
-### Completed (13/22)
+### Completed (14/22)
 
 **P1 — Critical Mobile Fixes (ALL DONE)**
 - [x] Mobile hamburger nav menu — `Header.tsx` rewritten with hamburger button on `<md`, slide-down panel, active route highlighting via `usePathname()`, close on outside click + route change
@@ -581,7 +581,7 @@ Full screenshot audit completed across all 12 pages (desktop + mobile). Working 
 - [x] **Task 12: Timeline colour legend** — dot legend below filters, extracted `CATEGORY_DOT_COLORS` constant
 - [ ] **Task 13: Brief preview + history** — add output description, save briefs to new `briefs` table, show previous briefs. File: `src/app/brief/page.tsx`. DB migration needed.
 - [x] **Task 14: Vault file type badges** — colour-coded PDF/IMG/DOC/TXT badges from mime_type, shown next to filename
-- [ ] **Task 15: Journal writing prompts** — optional prompts when textarea empty in `src/app/journal/new/page.tsx`
+- [x] **Task 15: Journal writing prompts** — 8 clickable prompt chips below textarea when empty, disappear on typing
 - [ ] **Task 16: Dashboard recent activity** — activity summary card at top of `src/app/dashboard/page.tsx`
 - [ ] **Task 17: Replace expense tracker placeholder** — update `src/lib/dashboard-content.ts`
 
