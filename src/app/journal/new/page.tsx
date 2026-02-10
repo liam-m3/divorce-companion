@@ -12,6 +12,17 @@ import type { Mood, JournalCategory } from '@/types';
 
 const DRAFT_KEY = 'divorce-companion-journal-draft';
 
+const WRITING_PROMPTS = [
+  'What happened today that\'s on your mind?',
+  'How did a conversation with your ex go?',
+  'What are you worried about right now?',
+  'Something the kids said or did that affected you',
+  'A decision you\'re struggling with',
+  'How you\'re feeling about the legal process',
+  'Something positive that happened today',
+  'What you wish you could tell someone',
+];
+
 interface Draft {
   content: string;
   title: string;
@@ -200,6 +211,24 @@ export default function NewEntryPage() {
             placeholder="What happened? Write everything — raw, messy, emotional. You can clean it up later..."
             className="w-full min-h-[240px] p-3 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 text-base leading-relaxed resize-y focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:border-transparent"
           />
+
+          {!content.trim() && (
+            <div className="mt-3">
+              <p className="text-xs font-medium text-zinc-400 dark:text-zinc-500 mb-2">Not sure where to start? Try one of these:</p>
+              <div className="flex flex-wrap" style={{ gap: '0.5rem' }}>
+                {WRITING_PROMPTS.map((prompt) => (
+                  <button
+                    key={prompt}
+                    type="button"
+                    onClick={() => setContent(prompt + '\n\n')}
+                    className="text-xs px-2.5 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:border-zinc-400 hover:text-zinc-700 dark:hover:border-zinc-500 dark:hover:text-zinc-300 transition-colors text-left"
+                  >
+                    {prompt}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {error && (
             <p className="mt-2 text-sm text-red-500">{error}</p>
