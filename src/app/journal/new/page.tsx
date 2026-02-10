@@ -209,7 +209,7 @@ export default function NewEntryPage() {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="What happened? Write everything — raw, messy, emotional. You can clean it up later..."
-            className="w-full min-h-[240px] p-3 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 text-base leading-relaxed resize-y focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:border-transparent"
+            className="w-full min-h-[160px] sm:min-h-[240px] p-3 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 text-base leading-relaxed resize-y focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:border-transparent"
           />
 
           {!content.trim() && (
