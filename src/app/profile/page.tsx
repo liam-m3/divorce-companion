@@ -26,6 +26,7 @@ export default function ProfilePage() {
   const [success, setSuccess] = useState('');
 
   // Form state
+  const [displayName, setDisplayName] = useState('');
   const [country, setCountry] = useState('');
   const [relationshipType, setRelationshipType] = useState<RelationshipType | ''>('');
   const [stage, setStage] = useState<Stage | ''>('');
@@ -52,6 +53,7 @@ export default function ProfilePage() {
 
       if (profile) {
         const p = profile as Profile;
+        setDisplayName(p.display_name || '');
         setCountry(p.country || '');
         setRelationshipType((p.relationship_type as RelationshipType) || '');
         setStage((p.stage as Stage) || '');
@@ -92,6 +94,7 @@ export default function ProfilePage() {
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
+          display_name: displayName.trim() || null,
           country,
           relationship_type: relationshipType,
           stage,
@@ -139,6 +142,18 @@ export default function ProfilePage() {
         </div>
 
         <div className="space-y-6">
+          {/* Display Name */}
+          <Card className="p-6">
+            <h2 className="font-semibold text-zinc-900 dark:text-white mb-4">Your Name</h2>
+            <Input
+              label="Display Name"
+              type="text"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="What should we call you?"
+            />
+          </Card>
+
           {/* Location */}
           <Card className="p-6">
             <h2 className="font-semibold text-zinc-900 dark:text-white mb-4">Location</h2>

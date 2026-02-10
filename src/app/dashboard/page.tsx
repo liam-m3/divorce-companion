@@ -38,6 +38,10 @@ export default async function DashboardPage() {
     ? STAGE_WELCOME_MESSAGES[typedProfile.stage as Stage]
     : 'Welcome to your dashboard';
 
+  const greeting = typedProfile.display_name
+    ? `Welcome back, ${typedProfile.display_name}`
+    : 'Welcome back';
+
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
       <Header />
@@ -45,7 +49,7 @@ export default async function DashboardPage() {
       <main className="max-w-5xl mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2">
-            Welcome back
+            {greeting}
           </h1>
           <p className="text-zinc-600 dark:text-zinc-400">
             {welcomeMessage}

@@ -22,6 +22,7 @@ export type Priority =
 export interface Profile {
   id: string;
   email: string;
+  display_name: string | null;
   country: string | null;
   relationship_type: RelationshipType | null;
   stage: Stage | null;
