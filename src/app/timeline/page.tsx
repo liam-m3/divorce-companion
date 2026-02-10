@@ -358,11 +358,13 @@ function TimelineEventCard({
   const [editDate, setEditDate] = useState(event.event_date);
   const [editCategory, setEditCategory] = useState<TimelineCategory | ''>(event.category || '');
 
-  const formattedDate = new Date(event.event_date + 'T00:00:00').toLocaleDateString('en-GB', {
+  const eventDate = new Date(event.event_date + 'T00:00:00');
+  const formattedDate = eventDate.toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
   });
+  const isFuture = eventDate > new Date();
 
   const handleSaveEdit = () => {
     if (!editTitle.trim()) return;
@@ -457,6 +459,11 @@ function TimelineEventCard({
               <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
                 {formattedDate}
               </span>
+              {isFuture && (
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400">
+                  Upcoming
+                </span>
+              )}
               {event.category && (
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${CATEGORY_COLORS[event.category]}`}>
                   {CATEGORY_LABELS[event.category]}
