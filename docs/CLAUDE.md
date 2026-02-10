@@ -77,7 +77,7 @@ Over time, user fills in everything — journal entries, documents, finances, ti
 | P2 | Landing page features | DONE |
 | P2 | Journal auto-save drafts | DONE |
 | P2 | Onboarding mobile UX | DONE |
-| P3 | Currency from country | TODO |
+| P3 | Currency from country | DONE |
 | P3 | Timeline colour legend | TODO |
 | P3 | Brief preview + history | TODO |
 | P3 | Vault file type badges | TODO |
@@ -558,7 +558,7 @@ npm run dev
 
 Full screenshot audit completed across all 12 pages (desktop + mobile). Working through prioritised fixes on branch `feat/phase3-polish`.
 
-### Completed (10/22)
+### Completed (11/22)
 
 **P1 — Critical Mobile Fixes (ALL DONE)**
 - [x] Mobile hamburger nav menu — `Header.tsx` rewritten with hamburger button on `<md`, slide-down panel, active route highlighting via `usePathname()`, close on outside click + route change
@@ -577,7 +577,7 @@ Full screenshot audit completed across all 12 pages (desktop + mobile). Working 
 ### Next Up (continue in order)
 
 **P3 — Feature Enhancements**
-- [ ] **Task 11: Currency from profile country** — create `src/lib/currency.ts` country-to-currency map, use in `src/app/finances/page.tsx` instead of hardcoded USD
+- [x] **Task 11: Currency from profile country** — `src/lib/currency.ts` maps country to locale/currency/symbol, finances page fetches profile and formats dynamically
 - [ ] **Task 12: Timeline colour legend** — add legend row below filters in `src/app/timeline/page.tsx`
 - [ ] **Task 13: Brief preview + history** — add output description, save briefs to new `briefs` table, show previous briefs. File: `src/app/brief/page.tsx`. DB migration needed.
 - [ ] **Task 14: Vault file type badges** — add PDF/IMG/DOC/TXT badges based on mime_type in `src/app/vault/page.tsx`
@@ -614,6 +614,8 @@ Full screenshot audit completed across all 12 pages (desktop + mobile). Working 
 - `src/app/onboarding/page.tsx` — mobile button layout, skip option
 - `src/components/onboarding/OptionCard.tsx` — primary fill when selected
 - `src/components/onboarding/Step*.tsx` — responsive headings
+- `src/lib/currency.ts` — NEW (country-to-currency map)
+- `src/app/finances/page.tsx` — dynamic currency from profile
 - `scripts/migrations/001_add_display_name.sql` — NEW
 
 ### Branch
