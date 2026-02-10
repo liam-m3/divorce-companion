@@ -30,6 +30,19 @@ const ALLOWED_TYPES = [
 ];
 const ALLOWED_EXTENSIONS = 'PDF, JPG, PNG, WEBP, DOC, DOCX, TXT';
 
+function getFileTypeBadge(mimeType: string | null): { label: string; className: string } | null {
+  if (!mimeType) return null;
+  if (mimeType === 'application/pdf')
+    return { label: 'PDF', className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' };
+  if (mimeType.startsWith('image/'))
+    return { label: 'IMG', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' };
+  if (mimeType === 'application/msword' || mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+    return { label: 'DOC', className: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' };
+  if (mimeType === 'text/plain')
+    return { label: 'TXT', className: 'bg-zinc-100 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300' };
+  return null;
+}
+
 function formatFileSize(bytes: number | null): string {
   if (!bytes) return '';
   if (bytes < 1024) return `${bytes} B`;
@@ -414,9 +427,19 @@ function DocumentCard({
     <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm p-5">
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <h3 className="font-medium text-zinc-900 dark:text-white break-words">
-            {doc.file_name}
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className="font-medium text-zinc-900 dark:text-white break-words">
+              {doc.file_name}
+            </h3>
+            {(() => {
+              const badge = getFileTypeBadge(doc.mime_type);
+              return badge ? (
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${badge.className} shrink-0`}>
+                  {badge.label}
+                </span>
+              ) : null;
+            })()}
+          </div>
           <div className="flex items-center gap-2 mt-1 text-xs text-zinc-500 dark:text-zinc-400">
             <span>{uploadDate}</span>
             {doc.file_size && (
