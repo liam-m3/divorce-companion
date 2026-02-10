@@ -25,6 +25,14 @@ const CATEGORY_COLORS: Record<TimelineCategory, string> = {
   children: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
 };
 
+const CATEGORY_DOT_COLORS: Record<TimelineCategory, string> = {
+  legal: 'bg-purple-500',
+  financial: 'bg-emerald-500',
+  personal: 'bg-blue-500',
+  emotional: 'bg-rose-500',
+  children: 'bg-amber-500',
+};
+
 export default function TimelinePage() {
   const router = useRouter();
   const supabase = createClient();
@@ -273,6 +281,18 @@ export default function TimelinePage() {
           </select>
         </div>
 
+        {/* Colour legend */}
+        {!loading && events.length > 0 && (
+          <div className="flex flex-wrap gap-x-4 gap-y-1 mb-6">
+            {TIMELINE_CATEGORIES.map((cat) => (
+              <div key={cat} className="flex items-center gap-1.5">
+                <div className={`w-2.5 h-2.5 rounded-full ${CATEGORY_DOT_COLORS[cat]}`} />
+                <span className="text-xs text-zinc-500 dark:text-zinc-400">{CATEGORY_LABELS[cat]}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Timeline view */}
         {loading ? (
           <div className="flex justify-center py-12">
@@ -426,13 +446,7 @@ function TimelineEventCard({
       {/* Timeline dot */}
       <div className={`absolute left-2.5 top-5 w-3 h-3 rounded-full border-2 border-zinc-50 dark:border-zinc-950 z-10 ${
         event.category
-          ? {
-              legal: 'bg-purple-500',
-              financial: 'bg-emerald-500',
-              personal: 'bg-blue-500',
-              emotional: 'bg-rose-500',
-              children: 'bg-amber-500',
-            }[event.category]
+          ? CATEGORY_DOT_COLORS[event.category]
           : 'bg-zinc-400 dark:bg-zinc-500'
       }`} />
 
