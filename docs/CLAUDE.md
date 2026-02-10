@@ -63,7 +63,7 @@ Over time, user fills in everything — journal entries, documents, finances, ti
 | 5 | Timeline | DONE |
 | 6 | Full Brief Generator | DONE |
 
-### Phase 3: Polish & UX Improvements — IN PROGRESS
+### Phase 3: Polish & UX Improvements — NEARLY COMPLETE (Task 13 pending DB migration)
 
 | Priority | Task | Status |
 |----------|------|--------|
@@ -558,7 +558,7 @@ npm run dev
 
 Full screenshot audit completed across all 12 pages (desktop + mobile). Working through prioritised fixes on branch `feat/phase3-polish`.
 
-### Completed (17/22)
+### Completed (22/22 — Task 13 skipped, needs DB migration)
 
 **P1 — Critical Mobile Fixes (ALL DONE)**
 - [x] Mobile hamburger nav menu — `Header.tsx` rewritten with hamburger button on `<md`, slide-down panel, active route highlighting via `usePathname()`, close on outside click + route change
@@ -585,12 +585,12 @@ Full screenshot audit completed across all 12 pages (desktop + mobile). Working 
 - [x] **Task 16: Dashboard recent activity** — "Your Progress" card with counts + latest item per section, clickable links
 - [x] **Task 17: Replace expense placeholder** — swapped "Coming soon" with info card pointing to Financial Tracker
 
-**P4 — Nice to Have**
-- [ ] Vault overflow menu on mobile
-- [ ] Timeline future events indicator
-- [ ] Journal textarea mobile sizing
-- [ ] Profile account management (change password, delete account)
-- [ ] Signup privacy note
+**P4 — Nice to Have (ALL DONE)**
+- [x] Vault overflow menu on mobile — vertical dots dropdown on `<sm`, inline buttons on desktop
+- [x] Timeline future events indicator — sky-blue "Upcoming" badge for future dates
+- [x] Journal textarea mobile sizing — `min-h-[160px]` on mobile, `sm:min-h-[240px]` on desktop
+- [x] Profile account management — change password via Supabase auth, delete account with confirmation
+- [x] Signup privacy note — "Your data is private and encrypted" below form
 
 ### DB Migrations
 1. ~~`ALTER TABLE profiles ADD COLUMN display_name TEXT;`~~ — SQL file at `scripts/migrations/001_add_display_name.sql` (needs to be run on Supabase)
