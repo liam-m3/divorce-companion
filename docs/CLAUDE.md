@@ -83,7 +83,7 @@ Over time, user fills in everything — journal entries, documents, finances, ti
 | P3 | Vault file type badges | DONE |
 | P3 | Journal writing prompts | DONE |
 | P3 | Dashboard recent activity | DONE |
-| P3 | Replace expense placeholder | TODO |
+| P3 | Replace expense placeholder | DONE |
 
 ---
 
@@ -558,7 +558,7 @@ npm run dev
 
 Full screenshot audit completed across all 12 pages (desktop + mobile). Working through prioritised fixes on branch `feat/phase3-polish`.
 
-### Completed (15/22)
+### Completed (17/22)
 
 **P1 — Critical Mobile Fixes (ALL DONE)**
 - [x] Mobile hamburger nav menu — `Header.tsx` rewritten with hamburger button on `<md`, slide-down panel, active route highlighting via `usePathname()`, close on outside click + route change
@@ -583,7 +583,7 @@ Full screenshot audit completed across all 12 pages (desktop + mobile). Working 
 - [x] **Task 14: Vault file type badges** — colour-coded PDF/IMG/DOC/TXT badges from mime_type, shown next to filename
 - [x] **Task 15: Journal writing prompts** — 8 clickable prompt chips below textarea when empty, disappear on typing
 - [x] **Task 16: Dashboard recent activity** — "Your Progress" card with counts + latest item per section, clickable links
-- [ ] **Task 17: Replace expense tracker placeholder** — update `src/lib/dashboard-content.ts`
+- [x] **Task 17: Replace expense placeholder** — swapped "Coming soon" with info card pointing to Financial Tracker
 
 **P4 — Nice to Have**
 - [ ] Vault overflow menu on mobile
