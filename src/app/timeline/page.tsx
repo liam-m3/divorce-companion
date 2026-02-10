@@ -156,7 +156,7 @@ export default function TimelinePage() {
       <Header />
 
       <main className="max-w-3xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
               Timeline
@@ -165,7 +165,7 @@ export default function TimelinePage() {
               {loading ? 'Loading...' : `${events.length} event${events.length !== 1 ? 's' : ''}`} &middot; Key moments in your journey
             </p>
           </div>
-          <Button onClick={() => setShowAddForm(!showAddForm)}>
+          <Button className="w-full sm:w-auto shrink-0" onClick={() => setShowAddForm(!showAddForm)}>
             {showAddForm ? 'Cancel' : 'Add Event'}
           </Button>
         </div>

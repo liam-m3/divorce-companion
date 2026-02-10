@@ -62,7 +62,7 @@ export default function JournalPage() {
       <Header />
 
       <main className="max-w-3xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
               Journal
@@ -71,8 +71,8 @@ export default function JournalPage() {
               Write what happened. AI will help you make sense of it later.
             </p>
           </div>
-          <Link href="/journal/new">
-            <Button>New Entry</Button>
+          <Link href="/journal/new" className="shrink-0">
+            <Button className="w-full sm:w-auto">New Entry</Button>
           </Link>
         </div>
 

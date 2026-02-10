@@ -185,7 +185,7 @@ export default function FinancesPage() {
       <Header />
 
       <main className="max-w-3xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
               Financial Tracker
@@ -194,20 +194,24 @@ export default function FinancesPage() {
               {loading ? 'Loading...' : `${itemCount} item${itemCount !== 1 ? 's' : ''}`} &middot; Track assets, debts, income &amp; expenses
             </p>
           </div>
-          <Button onClick={() => setShowAddForm(!showAddForm)}>
+          <Button className="w-full sm:w-auto shrink-0" onClick={() => setShowAddForm(!showAddForm)}>
             {showAddForm ? 'Cancel' : 'Add Item'}
           </Button>
         </div>
 
         {/* Summary cards */}
         {!loading && items.length > 0 && !typeFilter && !search && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
-            <SummaryCard label="Total Assets" amount={totalAssets} color="text-emerald-600 dark:text-emerald-400" />
-            <SummaryCard label="Total Debts" amount={totalDebts} color="text-red-600 dark:text-red-400" />
-            <SummaryCard label="Net Worth" amount={netWorth} color={netWorth >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'} />
-            <SummaryCard label="Monthly Income" amount={monthlyIncome} color="text-blue-600 dark:text-blue-400" />
-            <SummaryCard label="Monthly Expenses" amount={monthlyExpenses} color="text-amber-600 dark:text-amber-400" />
-            <SummaryCard label="Monthly Net" amount={monthlyNet} color={monthlyNet >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'} />
+          <div className="mb-6 space-y-3">
+            <div className="grid grid-cols-3 gap-3">
+              <SummaryCard label="Total Assets" amount={totalAssets} color="text-emerald-600 dark:text-emerald-400" />
+              <SummaryCard label="Total Debts" amount={totalDebts} color="text-red-600 dark:text-red-400" />
+              <SummaryCard label="Net Worth" amount={netWorth} color={netWorth >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'} />
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <SummaryCard label="Monthly Income" amount={monthlyIncome} color="text-blue-600 dark:text-blue-400" />
+              <SummaryCard label="Monthly Expenses" amount={monthlyExpenses} color="text-amber-600 dark:text-amber-400" />
+              <SummaryCard label="Monthly Net" amount={monthlyNet} color={monthlyNet >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'} />
+            </div>
           </div>
         )}
 
@@ -376,9 +380,9 @@ export default function FinancesPage() {
 
 function SummaryCard({ label, amount, color }: { label: string; amount: number; color: string }) {
   return (
-    <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm p-4">
-      <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">{label}</p>
-      <p className={`text-lg font-bold ${color}`}>
+    <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm p-3 sm:p-4">
+      <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1 truncate">{label}</p>
+      <p className={`text-sm sm:text-lg font-bold ${color} truncate`}>
         {formatCurrency(amount)}
       </p>
     </div>
