@@ -24,6 +24,11 @@ export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Form state
   const [displayName, setDisplayName] = useState('');
@@ -116,6 +121,47 @@ export default function ProfilePage() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleChangePassword = async () => {
+    if (!newPassword || !confirmNewPassword) {
+      setPasswordMessage('Please fill in both fields');
+      return;
+    }
+    if (newPassword.length < 8) {
+      setPasswordMessage('Password must be at least 8 characters');
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      setPasswordMessage('Passwords do not match');
+      return;
+    }
+
+    setPasswordSaving(true);
+    setPasswordMessage('');
+
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) {
+        setPasswordMessage(error.message);
+      } else {
+        setPasswordMessage('Password updated successfully');
+        setNewPassword('');
+        setConfirmNewPassword('');
+      }
+    } catch {
+      setPasswordMessage('An unexpected error occurred');
+    } finally {
+      setPasswordSaving(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    // Sign out — actual account deletion requires a server-side admin call
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push('/');
   };
 
   if (isLoading) {
@@ -278,6 +324,59 @@ export default function ProfilePage() {
               <Button variant="outline">Cancel</Button>
             </Link>
           </div>
+
+          {/* Account Management */}
+          <Card className="p-6">
+            <h2 className="font-semibold text-zinc-900 dark:text-white mb-4">Change Password</h2>
+            <div className="space-y-3">
+              <Input
+                label="New Password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="At least 8 characters"
+              />
+              <Input
+                label="Confirm New Password"
+                type="password"
+                value={confirmNewPassword}
+                onChange={(e) => setConfirmNewPassword(e.target.value)}
+                placeholder="Confirm new password"
+              />
+              {passwordMessage && (
+                <p className={`text-sm ${passwordMessage.includes('successfully') ? 'text-green-600 dark:text-green-400' : 'text-red-500'}`}>
+                  {passwordMessage}
+                </p>
+              )}
+              <Button size="sm" onClick={handleChangePassword} isLoading={passwordSaving}>
+                Update Password
+              </Button>
+            </div>
+          </Card>
+
+          <Card className="p-6 border-red-200 dark:border-red-900/50">
+            <h2 className="font-semibold text-red-600 dark:text-red-400 mb-2">Delete Account</h2>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
+              This will sign you out. To permanently delete your data, please contact support.
+            </p>
+            {showDeleteConfirm ? (
+              <div className="flex items-center gap-3">
+                <Button size="sm" variant="outline" onClick={handleDeleteAccount} className="border-red-300 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/30">
+                  Yes, sign me out
+                </Button>
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <Button size="sm" variant="outline" onClick={() => setShowDeleteConfirm(true)} className="border-red-300 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/30">
+                Delete Account
+              </Button>
+            )}
+          </Card>
         </div>
       </div>
     </div>
