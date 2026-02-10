@@ -146,8 +146,30 @@ This document records key technical decisions made during development.
 - Inline edit/delete follows established vault/finances pattern
 - Original spec had separate `/timeline/new` and `/timeline/[id]/edit` pages, but single-page is more consistent with the rest of the app
 
+### 15. Full Brief Generator — Parallel Fetch + Summarise-First Strategy
+
+**Decision:** Fetch all user data in parallel, prefer existing AI summaries over raw journal content, and cap at 30 journal entries to stay within context limits
+
+**Reason:**
+- Parallel fetching (Promise.all) keeps response time fast even with lots of data
+- Using pre-generated AI summaries for journal entries reduces token usage and improves brief quality (structured data in, structured data out)
+- Falls back to truncated raw content (500 chars) for entries without summaries
+- 30-entry limit prevents prompt from exceeding Groq's context window
+- 3000 max tokens gives room for a comprehensive 1-2 page brief
+
+### 16. Lazy Groq Client Initialisation
+
+**Decision:** Initialise the Groq SDK client inside a function call rather than at module level
+
+**Reason:**
+- Groq SDK throws an error if `GROQ_API_KEY` env var is missing at instantiation time
+- At module level, this runs during Next.js build (both locally and on Vercel)
+- Vercel builds don't have runtime env vars available during the build step
+- Lazy init defers instantiation to request time, when env vars are available
+
 ## Future Considerations
 
-- **Full Brief Generator:** Will need to handle large context windows — may need to summarise individual sources before bundling into final prompt.
 - **Email notifications:** Evaluate Supabase Edge Functions vs external service.
 - **Multi-language:** Consider i18n library (next-intl or similar) when ready.
+- **Brief persistence:** Consider saving generated briefs to database so users can view past briefs without regenerating.
+- **Brief customisation:** Let users choose which data sources to include (e.g. exclude finances, focus on children).

@@ -7,7 +7,7 @@
 - **Auth & Database:** Supabase (Auth + PostgreSQL + Storage)
 - **Styling:** Tailwind CSS 4
 - **Language:** TypeScript (strict mode)
-- **AI:** Groq SDK (Llama 3.3 70B for journal summaries)
+- **AI:** Groq SDK (Llama 3.3 70B for journal summaries + full brief generation)
 - **Hosting:** Vercel
 
 ## Directory Structure
@@ -59,7 +59,7 @@ src/
 │   │   ├── StepPriorities.tsx          # Multi-select priorities
 │   │   └── StepChildren.tsx            # Children info
 │   ├── dashboard/                      # Dashboard components
-│   │   ├── Header.tsx                  # Nav bar (Journal, Vault, Finances, Profile, Logout)
+│   │   ├── Header.tsx                  # Nav bar (Journal, Vault, Finances, Timeline, Brief, Profile, Logout)
 │   │   ├── ContentBlock.tsx            # Block type router
 │   │   ├── Checklist.tsx               # Persistent checklist (DB-backed)
 │   │   ├── PromptCard.tsx              # Reflection prompts
@@ -229,13 +229,21 @@ All tables have RLS enabled. Policy on all tables: `auth.uid() = user_id` (or `a
 - Delete: removes from both Storage and database
 - Inline editing for metadata (filename, category, notes)
 
-### AI Summary
+### AI Summary (Journal)
 1. Frontend sends `{ entryId }` to `POST /api/journal/summarise`
 2. Server fetches entry from Supabase (RLS verifies ownership)
 3. Calls Groq API (`llama-3.3-70b-versatile`) with structured prompt
 4. Saves summary + timestamp to `journal_entries` table
 5. Returns summary JSON to frontend
 6. Output: structured incident report (date, people, events, statements, children, legal points, status)
+
+### Full Brief Generator
+1. Frontend sends `POST /api/brief/generate` (no body needed)
+2. Server fetches ALL user data in parallel: journal entries (up to 30), documents, financial items, timeline events, user profile
+3. Builds structured prompt with sections: profile, journal entries (prefers AI summaries), timeline, financial overview, documents
+4. Calls Groq API with 3000 max tokens
+5. Returns structured brief: Client Overview, Situation Summary, Key Incidents, Financial Position, Documents Available, Areas of Concern, Recommended Next Steps
+6. Frontend displays with copy, export PDF, and regenerate actions
 
 ## Environment Variables
 

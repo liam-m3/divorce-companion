@@ -18,7 +18,7 @@
 
 ---
 
-## Phase 2: Core Features — IN PROGRESS
+## Phase 2: Core Features — COMPLETE
 
 ### Journal with AI Summary — DONE
 - [x] TypeScript types (JournalEntry, Mood, JournalCategory)
@@ -60,21 +60,24 @@
 - [x] Currency formatting and monthly normalisation
 - [x] Dashboard navigation link
 
-### Timeline — NOT STARTED
-- [ ] `timeline_events` table with RLS
-- [ ] TypeScript types (TimelineEvent)
-- [ ] Chronological event view
-- [ ] Add/edit/delete events
-- [ ] Category tagging (legal, financial, personal, emotional, children)
-- [ ] Dashboard navigation link
+### Timeline — DONE
+- [x] `timeline_events` table with RLS
+- [x] TypeScript types (TimelineEvent, TimelineCategory)
+- [x] Chronological event view grouped by year with visual timeline
+- [x] Add/edit/delete events with inline CRUD
+- [x] Category tagging with coloured dots (legal, financial, personal, emotional, children)
+- [x] Search and category filter
+- [x] Dashboard navigation link
 
-### Full Brief Generator — NOT STARTED
-- [ ] Dedicated page or dashboard action
-- [ ] Fetch all user data (journal entries, documents, financials, timeline)
-- [ ] Bundle into single AI prompt via Groq API
-- [ ] Generate 1-2 page professional brief
-- [ ] Copy, export PDF, share options
-- [ ] Requires Priorities 1-5 to be built first
+### Full Brief Generator — DONE
+- [x] Dedicated `/brief` page with data overview cards
+- [x] Fetch all user data in parallel (journal, documents, financials, timeline, profile)
+- [x] Bundle into structured AI prompt via Groq API (3000 max tokens)
+- [x] Generate professional situation brief (Client Overview, Situation Summary, Key Incidents, Financial Position, Documents, Areas of Concern, Next Steps)
+- [x] Copy to clipboard and Export PDF
+- [x] Regenerate button
+- [x] Data sources summary
+- [x] Dashboard navigation link
 
 ---
 
