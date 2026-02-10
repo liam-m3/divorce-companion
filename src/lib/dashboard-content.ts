@@ -114,10 +114,10 @@ const PRIORITY_CONTENT: Record<Priority, ContentBlock[]> = {
       ],
     },
     {
-      id: 'finances-placeholder',
-      type: 'placeholder',
-      title: 'Expense Tracker',
-      content: 'Coming in a future update',
+      id: 'finances-info',
+      type: 'info',
+      title: 'Financial Tracker',
+      content: 'Track your assets, debts, income, and expenses in the Financial Tracker. A clear picture of your finances helps during negotiations.',
     },
   ],
   housing: [
