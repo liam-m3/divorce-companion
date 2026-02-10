@@ -78,7 +78,7 @@ Over time, user fills in everything — journal entries, documents, finances, ti
 | P2 | Journal auto-save drafts | DONE |
 | P2 | Onboarding mobile UX | DONE |
 | P3 | Currency from country | DONE |
-| P3 | Timeline colour legend | TODO |
+| P3 | Timeline colour legend | DONE |
 | P3 | Brief preview + history | TODO |
 | P3 | Vault file type badges | TODO |
 | P3 | Journal writing prompts | TODO |
@@ -558,7 +558,7 @@ npm run dev
 
 Full screenshot audit completed across all 12 pages (desktop + mobile). Working through prioritised fixes on branch `feat/phase3-polish`.
 
-### Completed (11/22)
+### Completed (12/22)
 
 **P1 — Critical Mobile Fixes (ALL DONE)**
 - [x] Mobile hamburger nav menu — `Header.tsx` rewritten with hamburger button on `<md`, slide-down panel, active route highlighting via `usePathname()`, close on outside click + route change
@@ -578,7 +578,7 @@ Full screenshot audit completed across all 12 pages (desktop + mobile). Working 
 
 **P3 — Feature Enhancements**
 - [x] **Task 11: Currency from profile country** — `src/lib/currency.ts` maps country to locale/currency/symbol, finances page fetches profile and formats dynamically
-- [ ] **Task 12: Timeline colour legend** — add legend row below filters in `src/app/timeline/page.tsx`
+- [x] **Task 12: Timeline colour legend** — dot legend below filters, extracted `CATEGORY_DOT_COLORS` constant
 - [ ] **Task 13: Brief preview + history** — add output description, save briefs to new `briefs` table, show previous briefs. File: `src/app/brief/page.tsx`. DB migration needed.
 - [ ] **Task 14: Vault file type badges** — add PDF/IMG/DOC/TXT badges based on mime_type in `src/app/vault/page.tsx`
 - [ ] **Task 15: Journal writing prompts** — optional prompts when textarea empty in `src/app/journal/new/page.tsx`
