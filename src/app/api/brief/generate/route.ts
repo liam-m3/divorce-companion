@@ -2,7 +2,9 @@ import { createClient } from '@/lib/supabase/server';
 import Groq from 'groq-sdk';
 import { NextResponse } from 'next/server';
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+function getGroq() {
+  return new Groq({ apiKey: process.env.GROQ_API_KEY });
+}
 
 export async function POST() {
   const supabase = await createClient();
@@ -148,7 +150,7 @@ export async function POST() {
 
     const userContent = sections.join('\n\n---\n\n');
 
-    const chatCompletion = await groq.chat.completions.create({
+    const chatCompletion = await getGroq().chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       max_tokens: 3000,
       messages: [
