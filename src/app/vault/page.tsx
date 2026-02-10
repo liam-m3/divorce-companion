@@ -357,6 +357,7 @@ function DocumentCard({
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [editName, setEditName] = useState(doc.file_name);
   const [editCategory, setEditCategory] = useState(doc.category || '');
   const [editNotes, setEditNotes] = useState(doc.notes || '');
@@ -463,7 +464,8 @@ function DocumentCard({
           )}
         </div>
 
-        <div className="flex items-center gap-3 shrink-0 pt-1 sm:pt-0 border-t sm:border-t-0 border-zinc-100 dark:border-zinc-800">
+        {/* Desktop actions */}
+        <div className="hidden sm:flex items-center gap-3 shrink-0">
           <button
             onClick={() => setEditing(true)}
             className="text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
@@ -498,6 +500,57 @@ function DocumentCard({
             >
               Delete
             </button>
+          )}
+        </div>
+
+        {/* Mobile overflow menu */}
+        <div className="relative sm:hidden shrink-0">
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="p-1.5 rounded-lg text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+          >
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+            </svg>
+          </button>
+          {menuOpen && (
+            <div className="absolute right-0 top-full mt-1 w-36 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg z-20 py-1">
+              <button
+                onClick={() => { setEditing(true); setMenuOpen(false); }}
+                className="block w-full text-left px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => { onDownload(doc); setMenuOpen(false); }}
+                className="block w-full text-left px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700"
+              >
+                Download
+              </button>
+              {confirmDelete ? (
+                <>
+                  <button
+                    onClick={() => { onDelete(doc); setConfirmDelete(false); setMenuOpen(false); }}
+                    className="block w-full text-left px-3 py-2 text-sm text-red-500 hover:bg-zinc-50 dark:hover:bg-zinc-700"
+                  >
+                    Confirm Delete
+                  </button>
+                  <button
+                    onClick={() => { setConfirmDelete(false); setMenuOpen(false); }}
+                    className="block w-full text-left px-3 py-2 text-sm text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-700"
+                  >
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => setConfirmDelete(true)}
+                  className="block w-full text-left px-3 py-2 text-sm text-red-500 hover:bg-zinc-50 dark:hover:bg-zinc-700"
+                >
+                  Delete
+                </button>
+              )}
+            </div>
           )}
         </div>
       </div>
