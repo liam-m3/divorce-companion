@@ -63,7 +63,7 @@ Over time, user fills in everything — journal entries, documents, finances, ti
 | 5 | Timeline | DONE |
 | 6 | Full Brief Generator | DONE |
 
-### Phase 3: Polish & UX Improvements — NEARLY COMPLETE (Task 13 pending DB migration)
+### Phase 3: Polish & UX Improvements — COMPLETE (except Task 13)
 
 | Priority | Task | Status |
 |----------|------|--------|
@@ -79,11 +79,16 @@ Over time, user fills in everything — journal entries, documents, finances, ti
 | P2 | Onboarding mobile UX | DONE |
 | P3 | Currency from country | DONE |
 | P3 | Timeline colour legend | DONE |
-| P3 | Brief preview + history | TODO |
+| P3 | Brief preview + history | TODO (needs DB migration) |
 | P3 | Vault file type badges | DONE |
 | P3 | Journal writing prompts | DONE |
 | P3 | Dashboard recent activity | DONE |
 | P3 | Replace expense placeholder | DONE |
+| P4 | Vault overflow menu on mobile | DONE |
+| P4 | Timeline future events indicator | DONE |
+| P4 | Journal textarea mobile sizing | DONE |
+| P4 | Profile account management | DONE |
+| P4 | Signup privacy note | DONE |
 
 ---
 
@@ -99,11 +104,34 @@ Over time, user fills in everything — journal entries, documents, finances, ti
 5. User redirected to `/dashboard`
 6. Future logins: if onboarding incomplete → `/onboarding`, otherwise → `/dashboard`
 
-**Middleware** (`middleware.ts`) handles session refresh, auth redirects, and onboarding enforcement on every request. Public routes: `/`, `/login`, `/signup`, `/forgot-password`, `/reset-password`. Everything else requires auth.
+**Password reset flow:**
+1. User clicks "Forgot password?" on `/login` → goes to `/forgot-password`
+2. Enters email → `resetPasswordForEmail()` sends email with reset link
+3. Email link redirects through Supabase → `/auth/callback?code=xxx&next=/reset-password`
+4. Auth callback route exchanges code for session via `exchangeCodeForSession()`
+5. User redirected to `/reset-password` with valid session
+6. User sets new password via `updateUser({ password })`
+
+**Auth callback:** `src/app/auth/callback/route.ts` — server route handler for Supabase PKCE code exchange. Handles password reset and any future OAuth flows.
+
+**Middleware** (`middleware.ts`) handles session refresh, auth redirects, and onboarding enforcement on every request. Public routes: `/`, `/login`, `/signup`, `/forgot-password`, `/reset-password`, `/auth/callback`. Everything else requires auth.
+
+**Onboarding UX:**
+- 5-step wizard: Country → Relationship → Stage → Priorities → Children
+- Full-width buttons on mobile, side-by-side on desktop
+- Primary fill on selected OptionCard (inverted colours when selected)
+- "Skip this step" option on steps 1-4
+- Responsive headings (`text-xl sm:text-2xl`)
+
+**Signup:** Includes privacy note — "Your data is private and encrypted."
 
 ### Dashboard
 
-Server component that fetches user profile and generates adaptive content blocks via `getContentBlocksForUser()`. Content changes based on the user's divorce stage and selected priorities. Includes navigation header with links to Journal, Vault, Finances, and Profile.
+Server component that fetches user profile and generates adaptive content blocks via `getContentBlocksForUser()`. Content changes based on the user's divorce stage and selected priorities. Includes navigation header with links to Journal, Vault, Finances, Timeline, Brief, Profile, and Logout.
+
+**Recent Activity Card:** "Your Progress" card at top of dashboard showing counts and latest item for journal entries, documents, timeline events, and financial items. Each stat is a clickable link to the respective page. Only shown when user has data. Fetched server-side via parallel Supabase queries.
+
+**Personalised Greeting:** Shows "Welcome back, [display_name]" if set, otherwise "Welcome back".
 
 ### Journal (Priority 1) — DONE
 
@@ -126,6 +154,12 @@ Users write raw emotional entries. AI generates professional summaries for lawye
 | MoodPicker | `src/components/journal/MoodPicker.tsx` | 8 clickable mood chips with colour coding |
 | CategoryPicker | `src/components/journal/CategoryPicker.tsx` | 7 clickable category chips |
 | AISummarySection | `src/components/journal/AISummarySection.tsx` | Generate/display summary with Copy, Export PDF, Regenerate |
+
+**Writing Prompts:** 8 clickable prompt suggestions shown below the textarea when empty (e.g. "What happened today that's on your mind?", "How did a conversation with your ex go?"). Clicking a prompt inserts it as starter text. Prompts disappear once there's content.
+
+**Auto-save Drafts:** Content, title, mood, category, and date auto-save to localStorage with 1s debounce. Recovery banner on page load offers "Resume" or "Discard". Drafts expire after 7 days. Cleared on successful save.
+
+**Mobile:** Textarea min-height is 160px on mobile, 240px on desktop.
 
 **AI Summary API:** `POST /api/journal/summarise`
 - File: `src/app/api/journal/summarise/route.ts`
@@ -175,6 +209,8 @@ Users upload, categorise, and manage divorce-related documents.
 - Inline metadata editing (filename, category, notes)
 - Download via signed URL (60-second expiry)
 - Delete with confirmation
+- **File type badges** — colour-coded PDF (red), IMG (blue), DOC (purple), TXT (grey) badges next to filename based on mime_type
+- **Mobile overflow menu** — vertical dots dropdown on mobile (`<sm`) with Edit/Download/Delete actions; inline buttons on desktop
 
 **Database: `documents`**
 ```sql
@@ -200,7 +236,10 @@ Users track assets, debts, income, and expenses. Single-page design with summary
 - Search by name
 - Inline edit and delete with confirmation
 - Colour-coded type badges (green=asset, red=debt, blue=income, amber=expense)
-- Currency formatting via `Intl.NumberFormat`
+- **Dynamic currency** — fetches user's profile country on mount, formats all amounts with correct locale and currency via `src/lib/currency.ts` (e.g. GBP for UK, EUR for Ireland/Germany/France, USD for US)
+
+**Currency mapping** (`src/lib/currency.ts`):
+Maps onboarding country values to `{ locale, currency, symbol }`. Falls back to USD for unknown countries or no country set.
 
 **Database: `financial_items`**
 ```sql
@@ -229,6 +268,8 @@ Users log key events in their divorce journey with dates.
 - Search by title or description
 - Filter by category
 - Category-coloured timeline dots (purple=legal, green=financial, blue=personal, rose=emotional, amber=children)
+- **Colour legend** — row of coloured dots with category labels below filters, visible when events exist
+- **Future events indicator** — sky-blue "Upcoming" badge for events with dates after today
 
 **Database: `timeline_events`**
 ```sql
@@ -264,12 +305,23 @@ Generates a comprehensive professional situation brief from ALL user data.
 
 ---
 
+### Profile — DONE
+
+**Route:** `/profile` (`src/app/profile/page.tsx`)
+
+**Features:**
+- Edit display name, country, relationship type, stage, priorities, children info
+- **Change password** — new password + confirm fields with validation (8+ chars, match), uses `supabase.auth.updateUser()`
+- **Delete account** — confirmation step, signs user out, directs to contact support for permanent data deletion
+
+---
+
 ## Database Schema (Complete)
 
 ### `profiles` (MVP 1)
 ```sql
-id UUID PK (refs auth.users), email TEXT, country TEXT,
-relationship_type TEXT, stage TEXT, priorities TEXT[],
+id UUID PK (refs auth.users), email TEXT, display_name TEXT,
+country TEXT, relationship_type TEXT, stage TEXT, priorities TEXT[],
 has_children BOOLEAN, children_count INTEGER, children_ages TEXT,
 onboarding_completed BOOLEAN DEFAULT FALSE,
 created_at TIMESTAMPTZ, updated_at TIMESTAMPTZ
@@ -324,28 +376,31 @@ All tables have RLS enabled with `auth.uid() = user_id` policies.
 ```
 src/
 ├── app/
-│   ├── page.tsx                        # Landing page
+│   ├── page.tsx                        # Landing page with feature cards
 │   ├── layout.tsx                      # Root layout (Geist fonts, globals)
 │   ├── globals.css                     # Tailwind styles
 │   ├── error.tsx                       # Global error boundary
 │   ├── not-found.tsx                   # 404 page
 │   ├── loading.tsx                     # Global loading state
-│   ├── login/page.tsx                  # Login form
-│   ├── signup/page.tsx                 # Signup form
+│   ├── login/page.tsx                  # Login form + forgot password link
+│   ├── signup/page.tsx                 # Signup form + privacy note
+│   ├── forgot-password/page.tsx        # Request password reset email
+│   ├── reset-password/page.tsx         # Set new password (requires auth session)
+│   ├── auth/callback/route.ts          # Supabase PKCE code exchange
 │   ├── onboarding/page.tsx             # 5-step onboarding wizard
 │   ├── dashboard/
-│   │   ├── page.tsx                    # Adaptive dashboard
+│   │   ├── page.tsx                    # Adaptive dashboard + activity card
 │   │   └── loading.tsx                 # Dashboard loading state
-│   ├── profile/page.tsx                # Edit profile
+│   ├── profile/page.tsx                # Edit profile + change password + delete account
 │   ├── journal/
 │   │   ├── page.tsx                    # Journal list with filters
-│   │   ├── new/page.tsx                # Create new entry
+│   │   ├── new/page.tsx                # Create entry + writing prompts + auto-save
 │   │   └── [id]/
 │   │       ├── page.tsx                # View entry + AI summary
 │   │       └── edit/page.tsx           # Edit entry
-│   ├── vault/page.tsx                  # Document vault
-│   ├── finances/page.tsx               # Financial tracker
-│   ├── timeline/page.tsx               # Timeline with chronological events
+│   ├── vault/page.tsx                  # Document vault + file type badges + mobile overflow menu
+│   ├── finances/page.tsx               # Financial tracker + dynamic currency
+│   ├── timeline/page.tsx               # Timeline + colour legend + upcoming badge
 │   ├── brief/page.tsx                  # Full situation brief generator
 │   └── api/
 │       ├── journal/summarise/route.ts  # AI journal summary endpoint
@@ -353,22 +408,22 @@ src/
 │
 ├── components/
 │   ├── ui/
-│   │   ├── Button.tsx                  # Button with variants
-│   │   ├── Input.tsx                   # Text input with label
+│   │   ├── Button.tsx                  # Button with variants (primary/secondary/outline)
+│   │   ├── Input.tsx                   # Text input with label + password visibility toggle
 │   │   ├── Card.tsx                    # Card wrapper
 │   │   ├── Select.tsx                  # Dropdown select
 │   │   ├── Checkbox.tsx                # Checkbox input
 │   │   └── LoadingSpinner.tsx          # Loading indicator
 │   ├── onboarding/
 │   │   ├── ProgressBar.tsx             # Step progress indicator
-│   │   ├── OptionCard.tsx              # Clickable option card
+│   │   ├── OptionCard.tsx              # Clickable option card (primary fill when selected)
 │   │   ├── StepLocation.tsx            # Country selection
 │   │   ├── StepRelationship.tsx        # Relationship type
 │   │   ├── StepStage.tsx               # Divorce stage
 │   │   ├── StepPriorities.tsx          # Multi-select priorities
 │   │   └── StepChildren.tsx            # Children info
 │   ├── dashboard/
-│   │   ├── Header.tsx                  # Nav bar (Journal, Vault, Finances, Timeline, Profile, Logout)
+│   │   ├── Header.tsx                  # Nav bar with hamburger menu on mobile
 │   │   ├── ContentBlock.tsx            # Block type router
 │   │   ├── Checklist.tsx               # Persistent checklist (DB-backed)
 │   │   ├── PromptCard.tsx              # Reflection prompts
@@ -386,7 +441,8 @@ src/
 │   │   ├── server.ts                   # Server Supabase client (cookies)
 │   │   └── middleware.ts               # Auth middleware utilities
 │   ├── onboarding-config.ts            # Onboarding options & labels
-│   └── dashboard-content.ts            # Dynamic content block definitions
+│   ├── dashboard-content.ts            # Dynamic content block definitions
+│   └── currency.ts                     # Country-to-currency mapping
 │
 └── types/
     └── index.ts                        # All TypeScript types & constants
@@ -507,7 +563,7 @@ Use conventional commits with scope:
 | `test` | Tests | `test(finances): add CRUD tests` |
 | `chore` | Maintenance | `chore: update dependencies` |
 
-Scope: `(journal)`, `(vault)`, `(finances)`, `(timeline)`, `(dashboard)`
+Scope: `(journal)`, `(vault)`, `(finances)`, `(timeline)`, `(dashboard)`, `(auth)`, `(onboarding)`, `(profile)`
 
 ### Finishing a Feature
 
@@ -554,69 +610,17 @@ npm run dev
 
 ## Current Task
 
-**Phase 3: Polish & UX Improvements — IN PROGRESS**
+**Phase 3 is complete** (except Task 13: Brief preview + history, which requires a `briefs` DB table migration).
 
-Full screenshot audit completed across all 12 pages (desktop + mobile). Working through prioritised fixes on branch `feat/phase3-polish`.
-
-### Completed (22/22 — Task 13 skipped, needs DB migration)
-
-**P1 — Critical Mobile Fixes (ALL DONE)**
-- [x] Mobile hamburger nav menu — `Header.tsx` rewritten with hamburger button on `<md`, slide-down panel, active route highlighting via `usePathname()`, close on outside click + route change
-- [x] Page header mobile layouts — journal, vault, finances, timeline pages now use `flex-col sm:flex-row` so title stacks above action button on mobile
-- [x] Vault card mobile layout — filename uses `break-words` instead of `truncate`, action buttons move below file info on mobile with separator
-- [x] Finance summary cards — changed from `grid-cols-2 sm:grid-cols-3` to two rows of `grid-cols-3`, smaller text on mobile (`text-sm sm:text-lg`)
-
-**P2 — Essential UX (ALL DONE)**
-- [x] Forgot password flow — new `/forgot-password` and `/reset-password` pages using Supabase auth, added to public routes in middleware, "Forgot password?" link on login page
-- [x] Password visibility toggle — `Input.tsx` auto-detects `type="password"` and shows eye/eye-slash toggle, applies to all password fields across login, signup, reset-password
-- [x] Display name + personalised dashboard — `display_name` added to Profile type, "Your Name" card on profile page, dashboard shows "Welcome back, [name]"
-- [x] Landing page feature breakdown — hero section + 5 feature cards (Journal, Vault, Finances, Timeline, AI Brief) with Heroicons SVGs, responsive grid, privacy note
-- [x] Journal auto-save drafts — localStorage with debounce, recovery banner, clears on save
-- [x] Onboarding mobile UX — full-width buttons on mobile, primary fill on selected OptionCard, Back button layout, "Skip this step" option, responsive headings
-
-### Next Up (continue in order)
-
-**P3 — Feature Enhancements**
-- [x] **Task 11: Currency from profile country** — `src/lib/currency.ts` maps country to locale/currency/symbol, finances page fetches profile and formats dynamically
-- [x] **Task 12: Timeline colour legend** — dot legend below filters, extracted `CATEGORY_DOT_COLORS` constant
-- [ ] **Task 13: Brief preview + history** — add output description, save briefs to new `briefs` table, show previous briefs. File: `src/app/brief/page.tsx`. DB migration needed.
-- [x] **Task 14: Vault file type badges** — colour-coded PDF/IMG/DOC/TXT badges from mime_type, shown next to filename
-- [x] **Task 15: Journal writing prompts** — 8 clickable prompt chips below textarea when empty, disappear on typing
-- [x] **Task 16: Dashboard recent activity** — "Your Progress" card with counts + latest item per section, clickable links
-- [x] **Task 17: Replace expense placeholder** — swapped "Coming soon" with info card pointing to Financial Tracker
-
-**P4 — Nice to Have (ALL DONE)**
-- [x] Vault overflow menu on mobile — vertical dots dropdown on `<sm`, inline buttons on desktop
-- [x] Timeline future events indicator — sky-blue "Upcoming" badge for future dates
-- [x] Journal textarea mobile sizing — `min-h-[160px]` on mobile, `sm:min-h-[240px]` on desktop
-- [x] Profile account management — change password via Supabase auth, delete account with confirmation
-- [x] Signup privacy note — "Your data is private and encrypted" below form
+### Outstanding
+- [ ] **Task 13: Brief preview + history** — save briefs to new `briefs` table, show previous briefs. Requires DB migration to create `briefs` table with RLS.
 
 ### DB Migrations
-1. ~~`ALTER TABLE profiles ADD COLUMN display_name TEXT;`~~ — SQL file at `scripts/migrations/001_add_display_name.sql` (needs to be run on Supabase)
+1. ~~`ALTER TABLE profiles ADD COLUMN display_name TEXT;`~~ — SQL file at `scripts/migrations/001_add_display_name.sql` (run on Supabase)
 2. New `briefs` table with RLS (Task 13, not yet created)
 
-### Key Files Changed in Phase 3 So Far
-- `src/components/dashboard/Header.tsx` — full rewrite (hamburger nav)
-- `src/components/ui/Input.tsx` — password toggle added
-- `src/app/page.tsx` — landing page with features section
-- `src/app/login/page.tsx` — forgot password link
-- `src/app/forgot-password/page.tsx` — NEW
-- `src/app/reset-password/page.tsx` — NEW
-- `src/app/profile/page.tsx` — display name field
-- `src/app/dashboard/page.tsx` — personalised greeting
-- `src/app/journal/page.tsx` — mobile header layout
-- `src/app/vault/page.tsx` — mobile header + card layout
-- `src/app/finances/page.tsx` — mobile header + summary cards
-- `src/app/timeline/page.tsx` — mobile header layout
-- `src/lib/supabase/middleware.ts` — added public routes
-- `src/types/index.ts` — display_name on Profile
-- `src/app/onboarding/page.tsx` — mobile button layout, skip option
-- `src/components/onboarding/OptionCard.tsx` — primary fill when selected
-- `src/components/onboarding/Step*.tsx` — responsive headings
-- `src/lib/currency.ts` — NEW (country-to-currency map)
-- `src/app/finances/page.tsx` — dynamic currency from profile
-- `scripts/migrations/001_add_display_name.sql` — NEW
-
 ### Branch
-`feat/phase3-polish` — uncommitted changes, needs to be committed before continuing.
+`feat/phase3-polish`
+
+### Tailwind CSS 4 Note
+Some Tailwind utility classes (e.g. `gap-x-4`) don't render correctly in Tailwind v4. Use inline `style={{ gap: '...' }}` as a workaround when gap utilities fail.
