@@ -21,7 +21,7 @@ export default function StepPriorities({ value, onChange }: StepPrioritiesProps)
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-zinc-900 dark:text-white">
+        <h2 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white">
           What matters most to you right now?
         </h2>
         <p className="text-zinc-600 dark:text-zinc-400 mt-2">

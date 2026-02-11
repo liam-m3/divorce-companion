@@ -125,6 +125,10 @@ export default function SignupPage() {
             Log in
           </Link>
         </p>
+
+        <p className="text-xs text-zinc-400 dark:text-zinc-500 text-center mt-4">
+          Your data is private and encrypted. Only you can access your information.
+        </p>
       </Card>
     </div>
   );

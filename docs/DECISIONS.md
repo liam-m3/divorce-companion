@@ -167,9 +167,61 @@ This document records key technical decisions made during development.
 - Vercel builds don't have runtime env vars available during the build step
 - Lazy init defers instantiation to request time, when env vars are available
 
+## Phase 3 Decisions
+
+### 17. Mobile Navigation — Hamburger Menu
+
+**Decision:** Replace the horizontal nav link row with a hamburger menu on mobile (`< md` breakpoint), keeping the desktop nav unchanged
+
+**Reason:**
+- The shared Header component renders 7 nav items that wrap/overflow on mobile screens
+- Every authenticated page uses Header, so fixing it once fixes all pages
+- Hamburger with slide-down panel is standard mobile UX
+- Active route highlighting via `usePathname()` helps orientation
+
+### 18. Journal Auto-Save via localStorage
+
+**Decision:** Save journal draft to localStorage with debounced writes (~1 second), show recovery banner on page load
+
+**Reason:**
+- Users may be emotionally distressed while writing — accidental navigation shouldn't lose their work
+- localStorage is simpler than a server-side draft system and works offline
+- Debounce prevents excessive writes on every keystroke
+- Clear on successful save to prevent stale drafts
+
+### 19. Currency Formatting from Profile Country
+
+**Decision:** Create a country-to-currency map and format financial amounts based on the user's profile country instead of hardcoded USD
+
+**Reason:**
+- Users set their country during onboarding — we already have this data
+- Showing $ to a UK user is confusing/wrong
+- Simple static map is enough for now (no API needed)
+- Default to USD for unmapped countries
+
+### 20. Brief History Persistence
+
+**Decision:** Save generated briefs to a `briefs` table so users can view and compare past briefs
+
+**Reason:**
+- Implements the "Brief persistence" item from Future Considerations
+- Users update their data over time — comparing briefs shows progress
+- Simple table: id, user_id, content, generated_at with RLS
+- Low cost, high value for returning users
+
+### 21. Page Header Mobile Layout Pattern
+
+**Decision:** Use `flex-col sm:flex-row` pattern for all page headers (title + action button) across all feature pages
+
+**Reason:**
+- Consistent pattern across journal, vault, finances, timeline, brief
+- On mobile: title stacks above the action button instead of cramming side-by-side
+- Matches Tailwind responsive conventions
+- One-time change, applied identically across 5 pages
+
 ## Future Considerations
 
 - **Email notifications:** Evaluate Supabase Edge Functions vs external service.
 - **Multi-language:** Consider i18n library (next-intl or similar) when ready.
-- **Brief persistence:** Consider saving generated briefs to database so users can view past briefs without regenerating.
 - **Brief customisation:** Let users choose which data sources to include (e.g. exclude finances, focus on children).
+- **Dark mode toggle:** Already have `dark:` classes in most components, just need a toggle mechanism and persistence.

@@ -60,6 +60,12 @@ export default function OnboardingPage() {
     }
   };
 
+  const handleSkip = () => {
+    if (currentStep < TOTAL_STEPS) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
   const handleComplete = async () => {
     setIsLoading(true);
     setError('');
@@ -143,27 +149,42 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          <div className="flex justify-between mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-700">
-            {currentStep > 1 ? (
-              <Button variant="outline" onClick={handleBack}>
-                Back
-              </Button>
-            ) : (
-              <div />
-            )}
+          <div className="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-700 space-y-3">
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-3">
+              {currentStep > 1 ? (
+                <Button variant="outline" onClick={handleBack} className="w-full sm:w-auto">
+                  Back
+                </Button>
+              ) : (
+                <div className="hidden sm:block" />
+              )}
 
-            {currentStep < TOTAL_STEPS ? (
-              <Button onClick={handleNext} disabled={!canProceed()}>
-                Next
-              </Button>
-            ) : (
-              <Button
-                onClick={handleComplete}
-                disabled={!canProceed()}
-                isLoading={isLoading}
-              >
-                Complete
-              </Button>
+              {currentStep < TOTAL_STEPS ? (
+                <Button onClick={handleNext} disabled={!canProceed()} className="w-full sm:w-auto">
+                  Continue
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleComplete}
+                  disabled={!canProceed()}
+                  isLoading={isLoading}
+                  className="w-full sm:w-auto"
+                >
+                  Complete Setup
+                </Button>
+              )}
+            </div>
+
+            {currentStep < TOTAL_STEPS && (
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={handleSkip}
+                  className="text-sm text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+                >
+                  Skip this step
+                </button>
+              </div>
             )}
           </div>
         </Card>

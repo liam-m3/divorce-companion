@@ -30,6 +30,19 @@ const ALLOWED_TYPES = [
 ];
 const ALLOWED_EXTENSIONS = 'PDF, JPG, PNG, WEBP, DOC, DOCX, TXT';
 
+function getFileTypeBadge(mimeType: string | null): { label: string; className: string } | null {
+  if (!mimeType) return null;
+  if (mimeType === 'application/pdf')
+    return { label: 'PDF', className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' };
+  if (mimeType.startsWith('image/'))
+    return { label: 'IMG', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' };
+  if (mimeType === 'application/msword' || mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+    return { label: 'DOC', className: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' };
+  if (mimeType === 'text/plain')
+    return { label: 'TXT', className: 'bg-zinc-100 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300' };
+  return null;
+}
+
 function formatFileSize(bytes: number | null): string {
   if (!bytes) return '';
   if (bytes < 1024) return `${bytes} B`;
@@ -192,7 +205,7 @@ export default function VaultPage() {
       <Header />
 
       <main className="max-w-3xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
               Document Vault
@@ -201,7 +214,7 @@ export default function VaultPage() {
               {loading ? 'Loading...' : `${docCount} document${docCount !== 1 ? 's' : ''}`} &middot; Only you can see them
             </p>
           </div>
-          <Button onClick={() => setShowUploadForm(!showUploadForm)}>
+          <Button className="w-full sm:w-auto shrink-0" onClick={() => setShowUploadForm(!showUploadForm)}>
             {showUploadForm ? 'Cancel' : 'Upload File'}
           </Button>
         </div>
@@ -344,6 +357,7 @@ function DocumentCard({
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [editName, setEditName] = useState(doc.file_name);
   const [editCategory, setEditCategory] = useState(doc.category || '');
   const [editNotes, setEditNotes] = useState(doc.notes || '');
@@ -412,11 +426,21 @@ function DocumentCard({
 
   return (
     <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm p-5">
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <h3 className="font-medium text-zinc-900 dark:text-white truncate">
-            {doc.file_name}
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className="font-medium text-zinc-900 dark:text-white break-words">
+              {doc.file_name}
+            </h3>
+            {(() => {
+              const badge = getFileTypeBadge(doc.mime_type);
+              return badge ? (
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${badge.className} shrink-0`}>
+                  {badge.label}
+                </span>
+              ) : null;
+            })()}
+          </div>
           <div className="flex items-center gap-2 mt-1 text-xs text-zinc-500 dark:text-zinc-400">
             <span>{uploadDate}</span>
             {doc.file_size && (
@@ -440,7 +464,8 @@ function DocumentCard({
           )}
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        {/* Desktop actions */}
+        <div className="hidden sm:flex items-center gap-3 shrink-0">
           <button
             onClick={() => setEditing(true)}
             className="text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
@@ -475,6 +500,57 @@ function DocumentCard({
             >
               Delete
             </button>
+          )}
+        </div>
+
+        {/* Mobile overflow menu */}
+        <div className="relative sm:hidden shrink-0">
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="p-1.5 rounded-lg text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+          >
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+            </svg>
+          </button>
+          {menuOpen && (
+            <div className="absolute right-0 top-full mt-1 w-36 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg z-20 py-1">
+              <button
+                onClick={() => { setEditing(true); setMenuOpen(false); }}
+                className="block w-full text-left px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => { onDownload(doc); setMenuOpen(false); }}
+                className="block w-full text-left px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700"
+              >
+                Download
+              </button>
+              {confirmDelete ? (
+                <>
+                  <button
+                    onClick={() => { onDelete(doc); setConfirmDelete(false); setMenuOpen(false); }}
+                    className="block w-full text-left px-3 py-2 text-sm text-red-500 hover:bg-zinc-50 dark:hover:bg-zinc-700"
+                  >
+                    Confirm Delete
+                  </button>
+                  <button
+                    onClick={() => { setConfirmDelete(false); setMenuOpen(false); }}
+                    className="block w-full text-left px-3 py-2 text-sm text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-700"
+                  >
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => setConfirmDelete(true)}
+                  className="block w-full text-left px-3 py-2 text-sm text-red-500 hover:bg-zinc-50 dark:hover:bg-zinc-700"
+                >
+                  Delete
+                </button>
+              )}
+            </div>
           )}
         </div>
       </div>

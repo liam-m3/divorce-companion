@@ -25,6 +25,14 @@ const CATEGORY_COLORS: Record<TimelineCategory, string> = {
   children: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
 };
 
+const CATEGORY_DOT_COLORS: Record<TimelineCategory, string> = {
+  legal: 'bg-purple-500',
+  financial: 'bg-emerald-500',
+  personal: 'bg-blue-500',
+  emotional: 'bg-rose-500',
+  children: 'bg-amber-500',
+};
+
 export default function TimelinePage() {
   const router = useRouter();
   const supabase = createClient();
@@ -156,7 +164,7 @@ export default function TimelinePage() {
       <Header />
 
       <main className="max-w-3xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
               Timeline
@@ -165,7 +173,7 @@ export default function TimelinePage() {
               {loading ? 'Loading...' : `${events.length} event${events.length !== 1 ? 's' : ''}`} &middot; Key moments in your journey
             </p>
           </div>
-          <Button onClick={() => setShowAddForm(!showAddForm)}>
+          <Button className="w-full sm:w-auto shrink-0" onClick={() => setShowAddForm(!showAddForm)}>
             {showAddForm ? 'Cancel' : 'Add Event'}
           </Button>
         </div>
@@ -273,6 +281,18 @@ export default function TimelinePage() {
           </select>
         </div>
 
+        {/* Colour legend */}
+        {!loading && events.length > 0 && (
+          <div className="flex flex-wrap items-center mb-6" style={{ gap: '0.25rem 1rem' }}>
+            {TIMELINE_CATEGORIES.map((cat) => (
+              <div key={cat} className="flex items-center" style={{ gap: '0.375rem' }}>
+                <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${CATEGORY_DOT_COLORS[cat]}`} />
+                <span className="text-xs text-zinc-500 dark:text-zinc-400">{CATEGORY_LABELS[cat]}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Timeline view */}
         {loading ? (
           <div className="flex justify-center py-12">
@@ -338,11 +358,13 @@ function TimelineEventCard({
   const [editDate, setEditDate] = useState(event.event_date);
   const [editCategory, setEditCategory] = useState<TimelineCategory | ''>(event.category || '');
 
-  const formattedDate = new Date(event.event_date + 'T00:00:00').toLocaleDateString('en-GB', {
+  const eventDate = new Date(event.event_date + 'T00:00:00');
+  const formattedDate = eventDate.toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
   });
+  const isFuture = eventDate > new Date();
 
   const handleSaveEdit = () => {
     if (!editTitle.trim()) return;
@@ -426,13 +448,7 @@ function TimelineEventCard({
       {/* Timeline dot */}
       <div className={`absolute left-2.5 top-5 w-3 h-3 rounded-full border-2 border-zinc-50 dark:border-zinc-950 z-10 ${
         event.category
-          ? {
-              legal: 'bg-purple-500',
-              financial: 'bg-emerald-500',
-              personal: 'bg-blue-500',
-              emotional: 'bg-rose-500',
-              children: 'bg-amber-500',
-            }[event.category]
+          ? CATEGORY_DOT_COLORS[event.category]
           : 'bg-zinc-400 dark:bg-zinc-500'
       }`} />
 
@@ -443,6 +459,11 @@ function TimelineEventCard({
               <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
                 {formattedDate}
               </span>
+              {isFuture && (
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400">
+                  Upcoming
+                </span>
+              )}
               {event.category && (
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${CATEGORY_COLORS[event.category]}`}>
                   {CATEGORY_LABELS[event.category]}
