@@ -130,7 +130,7 @@ export default function JournalPage() {
             )}
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="flex flex-col" style={{ gap: '1rem' }}>
             {entries.map((entry) => (
               <EntryCard key={entry.id} entry={entry} />
             ))}

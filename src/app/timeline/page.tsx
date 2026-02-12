@@ -281,17 +281,6 @@ export default function TimelinePage() {
           </select>
         </div>
 
-        {/* Colour legend */}
-        {!loading && events.length > 0 && (
-          <div className="flex flex-wrap items-center mb-6" style={{ gap: '0.25rem 1rem' }}>
-            {TIMELINE_CATEGORIES.map((cat) => (
-              <div key={cat} className="flex items-center" style={{ gap: '0.375rem' }}>
-                <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${CATEGORY_DOT_COLORS[cat]}`} />
-                <span className="text-xs text-zinc-500 dark:text-zinc-400">{CATEGORY_LABELS[cat]}</span>
-              </div>
-            ))}
-          </div>
-        )}
 
         {/* Timeline view */}
         {loading ? (
