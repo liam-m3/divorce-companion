@@ -1,6 +1,6 @@
 # Development Roadmap
 
-## MVP 1 — COMPLETE
+## MVP 1 -- COMPLETE
 
 - [x] Project setup (Next.js 16, TypeScript, Tailwind CSS 4)
 - [x] Supabase client configuration (browser + server + middleware)
@@ -18,9 +18,9 @@
 
 ---
 
-## Phase 2: Core Features — COMPLETE
+## Phase 2: Core Features -- COMPLETE
 
-### Journal with AI Summary — DONE
+### Journal with AI Summary
 - [x] TypeScript types (JournalEntry, Mood, JournalCategory)
 - [x] Journal list view with mood/category/search filters
 - [x] New entry form with mood picker, category picker, incident date
@@ -31,13 +31,13 @@
 - [x] Entry delete with confirmation
 - [x] Dashboard navigation link
 
-### Persistent Checklists — DONE
+### Persistent Checklists
 - [x] `checklist_progress` table with RLS
 - [x] Track completed items per user per checklist
 - [x] Sync state across sessions via upsert
 - [x] Completion count display
 
-### Document Vault — DONE
+### Document Vault
 - [x] TypeScript types (Document, DocumentCategory)
 - [x] File upload with validation (50MB max, type restrictions)
 - [x] Supabase Storage integration (private bucket with RLS)
@@ -50,74 +50,73 @@
 - [x] Delete with confirmation
 - [x] Dashboard navigation link
 
-### Financial Tracker — DONE
+### Financial Tracker
 - [x] `financial_items` table with RLS
 - [x] TypeScript types (FinancialItem, FinancialType, Frequency)
-- [x] Single-page design with summary cards (Total Assets, Total Debts, Net Worth, Monthly Income, Monthly Expenses, Monthly Net)
-- [x] Add item form with type chips, name, amount, frequency (income/expense only), notes
+- [x] Single-page design with summary cards
+- [x] Add item form with type chips, name, amount, frequency, notes
 - [x] Inline edit and delete with confirmation
 - [x] Type filter and search by name
 - [x] Currency formatting and monthly normalisation
 - [x] Dashboard navigation link
 
-### Timeline — DONE
+### Timeline
 - [x] `timeline_events` table with RLS
 - [x] TypeScript types (TimelineEvent, TimelineCategory)
 - [x] Chronological event view grouped by year with visual timeline
 - [x] Add/edit/delete events with inline CRUD
-- [x] Category tagging with coloured dots (legal, financial, personal, emotional, children)
+- [x] Category tagging with coloured dots
 - [x] Search and category filter
 - [x] Dashboard navigation link
 
-### Full Brief Generator — DONE
+### Full Brief Generator
 - [x] Dedicated `/brief` page with data overview cards
-- [x] Fetch all user data in parallel (journal, documents, financials, timeline, profile)
-- [x] Bundle into structured AI prompt via Groq API (3000 max tokens)
-- [x] Generate professional situation brief (Client Overview, Situation Summary, Key Incidents, Financial Position, Documents, Areas of Concern, Next Steps)
-- [x] Copy to clipboard and Export PDF
+- [x] Fetch all user data in parallel
+- [x] Structured AI prompt via Groq API (3000 max tokens)
+- [x] Professional situation brief generation
+- [x] Copy to clipboard and export PDF
 - [x] Regenerate button
 - [x] Data sources summary
 - [x] Dashboard navigation link
 
 ---
 
-## Phase 3: Polish & UX Improvements — IN PROGRESS
+## Phase 3: Polish & UX -- COMPLETE
 
-Based on a full screenshot audit of all 12 pages (desktop + mobile). Prioritised by user impact.
+Based on a screenshot audit of all pages (desktop + mobile), prioritised by user impact.
 
-### Priority 1 — Critical Mobile Fixes — DONE
-- [x] Mobile hamburger nav menu (Header.tsx — affects all authenticated pages)
-- [x] Page header layouts on mobile (title + action button stacking for journal, vault, finances, timeline)
-- [x] Vault file card layout on mobile (filename truncation, action button cramming)
-- [x] Finance summary cards on mobile (cramped 2-col grid, number overflow)
+### Priority 1 -- Mobile Fixes
+- [x] Mobile hamburger nav menu (Header.tsx)
+- [x] Page header layouts on mobile (title + action button stacking)
+- [x] Vault file card layout on mobile (filename truncation, action buttons)
+- [x] Finance summary cards on mobile (grid and number overflow)
 
-### Priority 2 — Essential UX & Trust — IN PROGRESS (4/6)
-- [x] Forgot password flow (new `/forgot-password` + `/reset-password` pages)
-- [x] Password visibility toggle (auto eye icon on all password inputs)
-- [x] Display name on profile + personalised "Welcome back, [name]" on dashboard
-- [x] Landing page feature breakdown (5 feature cards with icons below CTA)
-- [ ] Journal auto-save drafts (localStorage with debounce + recovery banner)
-- [ ] Onboarding: full-width Next button on mobile, Back button, Skip option
+### Priority 2 -- UX & Trust
+- [x] Forgot password flow (`/forgot-password` + `/reset-password`)
+- [x] Password visibility toggle on all password inputs
+- [x] Display name on profile + personalised dashboard greeting
+- [x] Landing page feature breakdown (5 feature cards with icons)
+- [x] Journal auto-save drafts (localStorage with debounce + recovery banner)
+- [x] Onboarding: full-width Next button on mobile, Back button, Skip option
 
-### Priority 3 — Feature Enhancements
-- [ ] Currency formatting based on profile country (country-to-currency map)
-- [ ] Timeline colour legend (dot + label for each category)
-- [ ] Brief: output preview description + saved history (DB migration: `briefs` table)
-- [ ] Vault: file type badges (PDF, IMG, DOC, TXT based on mime_type)
-- [ ] Journal: writing prompts for blank textarea
-- [ ] Dashboard: recent activity summary card (this week's entries, uploads, upcoming events)
-- [ ] Replace "Expense Tracker — Coming Soon" placeholder with Financial Tracker link
+### Priority 3 -- Feature Enhancements
+- [x] Currency formatting based on profile country
+- [x] Vault file type badges (PDF, IMG, DOC, TXT)
+- [x] Journal writing prompts for blank textarea
+- [x] Dashboard recent activity summary card
+- [x] Replace expense tracker placeholder with Financial Tracker link
+- [ ] Brief: saved history (needs `briefs` table migration)
 
-### Priority 4 — Nice to Have
-- [ ] Vault: overflow menu ("...") for actions on mobile
-- [ ] Timeline: future events with "upcoming" visual treatment
-- [ ] Journal: larger textarea on mobile (min-h-[300px])
-- [ ] Profile: change password + delete account sections
-- [ ] Signup: privacy/trust note below Create Account button
+### Priority 4 -- Nice to Have
+- [x] Vault: overflow menu for actions on mobile
+- [x] Timeline: future events with "upcoming" badge
+- [x] Journal: larger textarea on mobile
+- [x] Profile: change password + delete account sections
+- [x] Signup: privacy/trust note below Create Account button
 
-### DB Migrations Required (Phase 3)
-1. `display_name TEXT` column on `profiles` table
-2. `briefs` table: id UUID PK, user_id UUID FK, content TEXT, generated_at TIMESTAMPTZ + RLS
+### DB Migrations (Phase 3)
+1. [x] `display_name TEXT` column on `profiles` table
+2. [ ] `briefs` table: id, user_id, content, generated_at + RLS
 
 ---
 
