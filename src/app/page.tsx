@@ -84,11 +84,11 @@ export default function Home() {
 
       {/* Features */}
       <section className="px-4 pb-24 sm:pb-32">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <h2 className="text-center text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-10">
             Everything in one place
           </h2>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="feature-grid">
             {FEATURES.map((feature) => (
               <div
                 key={feature.title}
