@@ -44,7 +44,6 @@ function buildPdfHtml(brief: string, generatedAt: string) {
 
 export default function BriefPage() {
   const router = useRouter();
-  const supabase = createClient();
 
   const [brief, setBrief] = useState<string | null>(null);
   const [stats, setStats] = useState<BriefStats | null>(null);
@@ -57,6 +56,7 @@ export default function BriefPage() {
   // Fetch data counts so user can see what'll be included
   useEffect(() => {
     async function fetchCounts() {
+      const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         router.push('/login');
