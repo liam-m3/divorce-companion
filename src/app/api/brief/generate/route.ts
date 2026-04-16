@@ -6,6 +6,9 @@ function getGroq() {
   return new Groq({ apiKey: process.env.GROQ_API_KEY });
 }
 
+// Simple in-memory rate limit — resets on deploy, which is fine for MVP
+const briefRateLimit = new Map<string, number[]>();
+
 export async function POST() {
   const supabase = await createClient();
 
@@ -13,6 +16,16 @@ export async function POST() {
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  // Rate limit: max 3 briefs per 24h per user
+  const now = Date.now();
+  const dayMs = 24 * 60 * 60 * 1000;
+  const timestamps = (briefRateLimit.get(user.id) || []).filter(t => now - t < dayMs);
+  if (timestamps.length >= 3) {
+    return NextResponse.json({ error: 'Too many requests. Try again later.' }, { status: 429 });
+  }
+  timestamps.push(now);
+  briefRateLimit.set(user.id, timestamps);
 
   try {
     // Fetch all user data in parallel

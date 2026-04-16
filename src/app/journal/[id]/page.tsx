@@ -44,6 +44,7 @@ export default function EntryPage() {
         .from('journal_entries')
         .select('*')
         .eq('id', entryId)
+        .eq('user_id', user.id)
         .single();
 
       if (error || !data) {
@@ -60,10 +61,14 @@ export default function EntryPage() {
 
   const handleDelete = async () => {
     setDeleting(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
     const { error } = await supabase
       .from('journal_entries')
       .delete()
-      .eq('id', entryId);
+      .eq('id', entryId)
+      .eq('user_id', user.id);
 
     if (error) {
       setDeleting(false);

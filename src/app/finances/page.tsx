@@ -20,8 +20,8 @@ const TYPE_LABELS: Record<FinancialType, string> = {
 const TYPE_COLORS: Record<FinancialType, string> = {
   asset: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
   debt: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-  income: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-  expense: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
+  income: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
+  expense: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
 };
 
 const FREQUENCY_LABELS: Record<Frequency, string> = {
@@ -139,7 +139,8 @@ export default function FinancesPage() {
       });
 
     if (insertError) {
-      setError(`Failed to save: ${insertError.message}`);
+      console.error('Failed to save:', insertError);
+      setError('Failed to save. Please try again.');
       setSaving(false);
       return;
     }
@@ -156,19 +157,27 @@ export default function FinancesPage() {
   }
 
   async function handleDelete(itemId: string) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
     await supabase
       .from('financial_items')
       .delete()
-      .eq('id', itemId);
+      .eq('id', itemId)
+      .eq('user_id', user.id);
 
     fetchItems();
   }
 
   async function handleUpdate(itemId: string, updates: Partial<Pick<FinancialItem, 'type' | 'name' | 'amount' | 'frequency' | 'notes'>>) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
     await supabase
       .from('financial_items')
       .update(updates)
-      .eq('id', itemId);
+      .eq('id', itemId)
+      .eq('user_id', user.id);
 
     fetchItems();
   }
@@ -226,9 +235,9 @@ export default function FinancesPage() {
               <SummaryCard label="Net Worth" amount={netWorth} color={netWorth >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'} formatAmount={formatAmount} />
             </div>
             <div className="grid grid-cols-3 gap-3">
-              <SummaryCard label="Monthly Income" amount={monthlyIncome} color="text-blue-600 dark:text-blue-400" formatAmount={formatAmount} />
-              <SummaryCard label="Monthly Expenses" amount={monthlyExpenses} color="text-amber-600 dark:text-amber-400" formatAmount={formatAmount} />
-              <SummaryCard label="Monthly Net" amount={monthlyNet} color={monthlyNet >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'} formatAmount={formatAmount} />
+              <SummaryCard label="Monthly Income" amount={monthlyIncome} formatAmount={formatAmount} />
+              <SummaryCard label="Monthly Expenses" amount={monthlyExpenses} formatAmount={formatAmount} />
+              <SummaryCard label="Monthly Net" amount={monthlyNet} formatAmount={formatAmount} />
             </div>
           </div>
         )}
@@ -373,11 +382,6 @@ export default function FinancesPage() {
                 ? 'No items match your search.'
                 : 'No financial items yet.'}
             </p>
-            {!typeFilter && !search && (
-              <Button onClick={() => setShowAddForm(true)}>
-                Add your first item
-              </Button>
-            )}
           </div>
         ) : (
           <div className="space-y-3">
@@ -398,11 +402,11 @@ export default function FinancesPage() {
   );
 }
 
-function SummaryCard({ label, amount, color, formatAmount }: { label: string; amount: number; color: string; formatAmount: (n: number) => string }) {
+function SummaryCard({ label, amount, color, formatAmount }: { label: string; amount: number; color?: string; formatAmount: (n: number) => string }) {
   return (
     <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm p-3 sm:p-4">
       <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1 truncate">{label}</p>
-      <p className={`text-sm sm:text-lg font-bold ${color} truncate`}>
+      <p className={`text-sm sm:text-lg font-bold truncate ${color || 'text-zinc-900 dark:text-white'}`}>
         {formatAmount(amount)}
       </p>
     </div>
@@ -545,11 +549,7 @@ function FinancialItemCard({
             </span>
           </div>
           <div className="flex items-center gap-2 mt-1">
-            <span className={`text-lg font-bold ${
-              item.type === 'asset' || item.type === 'income'
-                ? 'text-emerald-600 dark:text-emerald-400'
-                : 'text-red-600 dark:text-red-400'
-            }`}>
+            <span className="text-lg font-bold text-zinc-900 dark:text-white">
               {formatAmount(Number(item.amount))}
             </span>
             {item.frequency && (

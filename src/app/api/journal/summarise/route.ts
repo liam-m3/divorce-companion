@@ -14,7 +14,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { entryId } = await request.json();
+  // Rate limit: max 5 summaries per hour per user
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const { count } = await supabase
+    .from('journal_entries')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .gte('ai_summary_generated_at', oneHourAgo);
+
+  if (count !== null && count >= 5) {
+    return NextResponse.json({ error: 'Too many requests. Try again later.' }, { status: 429 });
+  }
+
+  const body = await request.json().catch(() => null);
+  if (!body?.entryId || typeof body.entryId !== 'string') {
+    return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
+  }
+  const { entryId } = body;
 
   // Fetch entry and verify ownership via RLS
   const { data: entry, error } = await supabase
@@ -84,7 +100,8 @@ Rules:
         ai_summary: summary,
         ai_summary_generated_at: new Date().toISOString(),
       })
-      .eq('id', entryId);
+      .eq('id', entryId)
+      .eq('user_id', user.id);
 
     if (updateError) {
       return NextResponse.json({ error: 'Failed to save summary' }, { status: 500 });

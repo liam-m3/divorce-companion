@@ -17,6 +17,7 @@ import Card from '@/components/ui/Card';
 import Select from '@/components/ui/Select';
 import Input from '@/components/ui/Input';
 import OptionCard from '@/components/onboarding/OptionCard';
+import Header from '@/components/dashboard/Header';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -111,7 +112,8 @@ export default function ProfilePage() {
         .eq('id', user.id);
 
       if (updateError) {
-        setError(updateError.message);
+        console.error('Profile update error:', updateError);
+        setError('Failed to save. Please try again.');
         return;
       }
 
@@ -144,7 +146,8 @@ export default function ProfilePage() {
       const supabase = createClient();
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) {
-        setPasswordMessage(error.message);
+        console.error('Password update error:', error);
+        setPasswordMessage('Failed to update password. Please try again.');
       } else {
         setPasswordMessage('Password updated successfully');
         setNewPassword('');
@@ -166,25 +169,26 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950">
-        <p className="text-zinc-500">Loading...</p>
+      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+        <Header />
+        <div className="flex items-center justify-center py-24">
+          <p className="text-zinc-500">Loading...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 py-8 px-4">
-      <div className="max-w-2xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+      <Header />
+      <div className="max-w-3xl mx-auto py-8 px-4">
+        <div className="mb-8">
           <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
             Edit Profile
           </h1>
-          <Link
-            href="/dashboard"
-            className="text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
-          >
-            Back to Dashboard
-          </Link>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+            Update your details and preferences
+          </p>
         </div>
 
         <div className="space-y-6">
@@ -326,6 +330,10 @@ export default function ProfilePage() {
           </div>
 
           {/* Account Management */}
+          <div className="pt-8 mt-4 border-t border-zinc-200 dark:border-zinc-800">
+            <h2 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4">Account</h2>
+          </div>
+
           <Card className="p-6">
             <h2 className="font-semibold text-zinc-900 dark:text-white mb-4">Change Password</h2>
             <div className="space-y-3">

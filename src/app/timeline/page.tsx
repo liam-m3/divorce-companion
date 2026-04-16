@@ -114,7 +114,8 @@ export default function TimelinePage() {
       });
 
     if (insertError) {
-      setError(`Failed to save: ${insertError.message}`);
+      console.error('Failed to save:', insertError);
+      setError('Failed to save. Please try again.');
       setSaving(false);
       return;
     }
@@ -130,19 +131,27 @@ export default function TimelinePage() {
   }
 
   async function handleDelete(eventId: string) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
     await supabase
       .from('timeline_events')
       .delete()
-      .eq('id', eventId);
+      .eq('id', eventId)
+      .eq('user_id', user.id);
 
     fetchEvents();
   }
 
   async function handleUpdate(eventId: string, updates: Partial<Pick<TimelineEvent, 'title' | 'description' | 'event_date' | 'category'>>) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
     await supabase
       .from('timeline_events')
       .update(updates)
-      .eq('id', eventId);
+      .eq('id', eventId)
+      .eq('user_id', user.id);
 
     fetchEvents();
   }
@@ -294,11 +303,6 @@ export default function TimelinePage() {
                 ? 'No events match your search.'
                 : 'No timeline events yet.'}
             </p>
-            {!categoryFilter && !search && (
-              <Button onClick={() => setShowAddForm(true)}>
-                Add your first event
-              </Button>
-            )}
           </div>
         ) : (
           <div className="space-y-8">

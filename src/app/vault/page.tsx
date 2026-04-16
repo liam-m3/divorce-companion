@@ -125,14 +125,16 @@ export default function VaultPage() {
       return;
     }
 
-    const filePath = `${user.id}/${Date.now()}-${file.name}`;
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const filePath = `${user.id}/${Date.now()}-${safeName}`;
 
     const { error: uploadError } = await supabase.storage
       .from('documents')
       .upload(filePath, file);
 
     if (uploadError) {
-      setError(`Upload failed: ${uploadError.message}`);
+      console.error('Upload failed:', uploadError);
+      setError('Upload failed. Please try again.');
       setUploading(false);
       return;
     }
@@ -150,7 +152,8 @@ export default function VaultPage() {
       });
 
     if (insertError) {
-      setError(`Failed to save document: ${insertError.message}`);
+      console.error('Failed to save document:', insertError);
+      setError('Failed to save document. Please try again.');
       setUploading(false);
       return;
     }
@@ -177,6 +180,9 @@ export default function VaultPage() {
   }
 
   async function handleDelete(doc: Document) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
     await supabase.storage
       .from('documents')
       .remove([doc.file_path]);
@@ -184,16 +190,21 @@ export default function VaultPage() {
     await supabase
       .from('documents')
       .delete()
-      .eq('id', doc.id);
+      .eq('id', doc.id)
+      .eq('user_id', user.id);
 
     fetchDocuments();
   }
 
   async function handleUpdate(docId: string, updates: { file_name?: string; category?: string | null; notes?: string | null }) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
     await supabase
       .from('documents')
       .update(updates)
-      .eq('id', docId);
+      .eq('id', docId)
+      .eq('user_id', user.id);
 
     fetchDocuments();
   }
@@ -320,11 +331,6 @@ export default function VaultPage() {
                 ? 'No documents match your search.'
                 : 'No documents uploaded yet.'}
             </p>
-            {!categoryFilter && !search && (
-              <Button onClick={() => setShowUploadForm(true)}>
-                Upload your first document
-              </Button>
-            )}
           </div>
         ) : (
           <div className="space-y-3">

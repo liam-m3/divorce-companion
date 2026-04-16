@@ -40,6 +40,7 @@ export default function EditEntryPage() {
         .from('journal_entries')
         .select('*')
         .eq('id', entryId)
+        .eq('user_id', user.id)
         .single();
 
       if (error || !data) {
@@ -69,6 +70,12 @@ export default function EditEntryPage() {
     setSaving(true);
     setError('');
 
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
     const { error: updateError } = await supabase
       .from('journal_entries')
       .update({
@@ -80,7 +87,8 @@ export default function EditEntryPage() {
         ai_summary: null,
         ai_summary_generated_at: null,
       })
-      .eq('id', entryId);
+      .eq('id', entryId)
+      .eq('user_id', user.id);
 
     if (updateError) {
       setError('Failed to save changes. Please try again.');
