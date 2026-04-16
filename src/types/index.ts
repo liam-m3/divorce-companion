@@ -46,22 +46,6 @@ export interface OnboardingData {
   children_ages: string | null;
 }
 
-// Dashboard content block types
-export type ContentBlockType = 'checklist' | 'prompt' | 'info' | 'placeholder';
-
-export interface ChecklistItem {
-  id: string;
-  text: string;
-  completed: boolean; // Local state only, not persisted
-}
-
-export interface ContentBlock {
-  id: string;
-  type: ContentBlockType;
-  title: string;
-  content: string | ChecklistItem[];
-}
-
 // Journal types
 export const MOODS = [
   'calm',

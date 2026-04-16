@@ -123,11 +123,6 @@ export default function JournalPage() {
                 ? 'No entries match your filters.'
                 : 'No journal entries yet. Start by writing what\'s on your mind.'}
             </p>
-            {!search && !moodFilter && !categoryFilter && (
-              <Link href="/journal/new">
-                <Button>Write your first entry</Button>
-              </Link>
-            )}
           </div>
         ) : (
           <div className="flex flex-col" style={{ gap: '1rem' }}>
