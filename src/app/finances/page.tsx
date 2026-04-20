@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Header from '@/components/dashboard/Header';
-import Button from '@/components/ui/Button';
+import Footer from '@/components/dashboard/Footer';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { FINANCIAL_TYPES, FREQUENCY_OPTIONS } from '@/types';
 import type { FinancialItem, FinancialType, Frequency } from '@/types';
@@ -17,18 +17,20 @@ const TYPE_LABELS: Record<FinancialType, string> = {
   expense: 'Expense',
 };
 
-const TYPE_COLORS: Record<FinancialType, string> = {
-  asset: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
-  debt: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-  income: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
-  expense: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-};
-
 const FREQUENCY_LABELS: Record<Frequency, string> = {
   one_time: 'One-time',
   monthly: 'Monthly',
   annually: 'Annually',
 };
+
+const FREQUENCY_SUFFIX: Record<Frequency, string> = {
+  one_time: 'one-time',
+  monthly: '/ month',
+  annually: '/ year',
+};
+
+const inputClass =
+  'w-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 rounded-md px-4 py-2.5 text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-100 transition-colors';
 
 export default function FinancesPage() {
   const router = useRouter();
@@ -43,7 +45,6 @@ export default function FinancesPage() {
   const [error, setError] = useState('');
   const [currencyConfig, setCurrencyConfig] = useState<CurrencyConfig>(getCurrencyConfig(null));
 
-  // Add form state
   const [newType, setNewType] = useState<FinancialType>('asset');
   const [newName, setNewName] = useState('');
   const [newAmount, setNewAmount] = useState('');
@@ -54,7 +55,7 @@ export default function FinancesPage() {
     return new Intl.NumberFormat(currencyConfig.locale, {
       style: 'currency',
       currency: currencyConfig.currency,
-      minimumFractionDigits: 2,
+      maximumFractionDigits: 0,
     }).format(amount);
   };
 
@@ -134,7 +135,8 @@ export default function FinancesPage() {
         type: newType,
         name: newName.trim(),
         amount,
-        frequency: (newType === 'income' || newType === 'expense') ? (newFrequency || null) : null,
+        frequency:
+          newType === 'income' || newType === 'expense' ? newFrequency || null : null,
         notes: newNotes.trim() || null,
       });
 
@@ -145,7 +147,6 @@ export default function FinancesPage() {
       return;
     }
 
-    // Reset form
     setNewType('asset');
     setNewName('');
     setNewAmount('');
@@ -169,7 +170,10 @@ export default function FinancesPage() {
     fetchItems();
   }
 
-  async function handleUpdate(itemId: string, updates: Partial<Pick<FinancialItem, 'type' | 'name' | 'amount' | 'frequency' | 'notes'>>) {
+  async function handleUpdate(
+    itemId: string,
+    updates: Partial<Pick<FinancialItem, 'type' | 'name' | 'amount' | 'frequency' | 'notes'>>
+  ) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
@@ -182,72 +186,77 @@ export default function FinancesPage() {
     fetchItems();
   }
 
-  // Calculate summary totals from ALL items (not filtered)
-  const allItems = items;
-  // We need unfiltered items for summary, so fetch separately if filtering
-  // For simplicity, compute from current items when no filter is active
-  // When filter is active, summary cards are hidden or we refetch all
-
-  const totalAssets = items.filter(i => i.type === 'asset').reduce((sum, i) => sum + Number(i.amount), 0);
-  const totalDebts = items.filter(i => i.type === 'debt').reduce((sum, i) => sum + Number(i.amount), 0);
+  const totalAssets = items
+    .filter((i) => i.type === 'asset')
+    .reduce((sum, i) => sum + Number(i.amount), 0);
+  const totalDebts = items
+    .filter((i) => i.type === 'debt')
+    .reduce((sum, i) => sum + Number(i.amount), 0);
   const netWorth = totalAssets - totalDebts;
-  const monthlyIncome = items.filter(i => i.type === 'income').reduce((sum, i) => {
-    const amt = Number(i.amount);
-    if (i.frequency === 'annually') return sum + amt / 12;
-    if (i.frequency === 'monthly') return sum + amt;
-    return sum + amt;
-  }, 0);
-  const monthlyExpenses = items.filter(i => i.type === 'expense').reduce((sum, i) => {
-    const amt = Number(i.amount);
-    if (i.frequency === 'annually') return sum + amt / 12;
-    if (i.frequency === 'monthly') return sum + amt;
-    return sum + amt;
-  }, 0);
+  const monthlyIncome = items
+    .filter((i) => i.type === 'income')
+    .reduce((sum, i) => {
+      const amt = Number(i.amount);
+      if (i.frequency === 'annually') return sum + amt / 12;
+      if (i.frequency === 'monthly') return sum + amt;
+      return sum + amt;
+    }, 0);
+  const monthlyExpenses = items
+    .filter((i) => i.type === 'expense')
+    .reduce((sum, i) => {
+      const amt = Number(i.amount);
+      if (i.frequency === 'annually') return sum + amt / 12;
+      if (i.frequency === 'monthly') return sum + amt;
+      return sum + amt;
+    }, 0);
   const monthlyNet = monthlyIncome - monthlyExpenses;
 
-  const itemCount = items.length;
+  const showSummary = !loading && items.length > 0 && !typeFilter && !search;
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100">
       <Header />
 
-      <main className="max-w-3xl mx-auto px-4 py-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
-              Financial Tracker
+      <main className="px-6">
+        <section className="max-w-3xl mx-auto pt-16 sm:pt-20 pb-12">
+          <div className="flex items-end justify-between gap-4 flex-wrap">
+            <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight leading-[1.05]">
+              Finances
             </h1>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-              {loading ? 'Loading...' : `${itemCount} item${itemCount !== 1 ? 's' : ''}`} &middot; Track assets, debts, income &amp; expenses
-            </p>
+            <button
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="inline-flex items-baseline gap-2 text-base font-medium border-b border-zinc-900 dark:border-zinc-100 pb-1 hover:text-zinc-600 dark:hover:text-zinc-400 hover:border-zinc-600 dark:hover:border-zinc-400 transition-colors"
+            >
+              {showAddForm ? 'Cancel' : 'Add item'}
+              {!showAddForm && <span aria-hidden>→</span>}
+            </button>
           </div>
-          <Button className="w-full sm:w-auto shrink-0" onClick={() => setShowAddForm(!showAddForm)}>
-            {showAddForm ? 'Cancel' : 'Add Item'}
-          </Button>
-        </div>
+        </section>
 
-        {/* Summary cards */}
-        {!loading && items.length > 0 && !typeFilter && !search && (
-          <div className="mb-6 space-y-3">
-            <div className="grid grid-cols-3 gap-3">
-              <SummaryCard label="Total Assets" amount={totalAssets} color="text-emerald-600 dark:text-emerald-400" formatAmount={formatAmount} />
-              <SummaryCard label="Total Debts" amount={totalDebts} color="text-red-600 dark:text-red-400" formatAmount={formatAmount} />
-              <SummaryCard label="Net Worth" amount={netWorth} color={netWorth >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'} formatAmount={formatAmount} />
+        {showSummary && (
+          <section className="max-w-3xl mx-auto py-10 border-t border-zinc-200 dark:border-zinc-900">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-8">
+              <SummaryStat label="Assets" amount={formatAmount(totalAssets)} tone="positive" />
+              <SummaryStat label="Debts" amount={formatAmount(totalDebts)} tone="negative" />
+              <SummaryStat
+                label="Net worth"
+                amount={formatAmount(netWorth)}
+                tone={netWorth >= 0 ? 'positive' : 'negative'}
+              />
+              <SummaryStat
+                label="Monthly net"
+                amount={formatAmount(monthlyNet)}
+                tone={monthlyNet >= 0 ? 'positive' : 'negative'}
+              />
             </div>
-            <div className="grid grid-cols-3 gap-3">
-              <SummaryCard label="Monthly Income" amount={monthlyIncome} formatAmount={formatAmount} />
-              <SummaryCard label="Monthly Expenses" amount={monthlyExpenses} formatAmount={formatAmount} />
-              <SummaryCard label="Monthly Net" amount={monthlyNet} formatAmount={formatAmount} />
-            </div>
-          </div>
+          </section>
         )}
 
-        {/* Add item form */}
         {showAddForm && (
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm p-5 mb-6">
-            <div className="space-y-4">
+          <section className="max-w-3xl mx-auto pb-10 border-t border-zinc-200 dark:border-zinc-900 pt-8">
+            <div className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+                <label className="block text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500 mb-3">
                   Type
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -255,10 +264,10 @@ export default function FinancesPage() {
                     <button
                       key={t}
                       onClick={() => setNewType(t)}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      className={`px-3 py-1.5 rounded-md text-xs uppercase tracking-[0.18em] transition-colors border ${
                         newType === t
-                          ? TYPE_COLORS[t]
-                          : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                          ? 'border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100'
+                          : 'border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-500 hover:border-zinc-400 dark:hover:border-zinc-700'
                       }`}
                     >
                       {TYPE_LABELS[t]}
@@ -268,7 +277,7 @@ export default function FinancesPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                <label className="block text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500 mb-2">
                   Name
                 </label>
                 <input
@@ -276,12 +285,12 @@ export default function FinancesPage() {
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   placeholder="e.g. Family home, Car loan, Salary"
-                  className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500"
+                  className={inputClass}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                <label className="block text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500 mb-2">
                   Amount ({currencyConfig.symbol})
                 </label>
                 <input
@@ -291,13 +300,13 @@ export default function FinancesPage() {
                   placeholder="0.00"
                   min="0"
                   step="0.01"
-                  className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500"
+                  className={inputClass}
                 />
               </div>
 
               {(newType === 'income' || newType === 'expense') && (
                 <div>
-                  <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+                  <label className="block text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500 mb-3">
                     Frequency
                   </label>
                   <div className="flex flex-wrap gap-2">
@@ -305,10 +314,10 @@ export default function FinancesPage() {
                       <button
                         key={f}
                         onClick={() => setNewFrequency(newFrequency === f ? '' : f)}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                        className={`px-3 py-1.5 rounded-md text-xs uppercase tracking-[0.18em] transition-colors border ${
                           newFrequency === f
-                            ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900'
-                            : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                            ? 'border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100'
+                            : 'border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-500 hover:border-zinc-400 dark:hover:border-zinc-700'
                         }`}
                       >
                         {FREQUENCY_LABELS[f]}
@@ -319,7 +328,7 @@ export default function FinancesPage() {
               )}
 
               <div>
-                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                <label className="block text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500 mb-2">
                   Notes (optional)
                 </label>
                 <input
@@ -327,93 +336,116 @@ export default function FinancesPage() {
                   value={newNotes}
                   onChange={(e) => setNewNotes(e.target.value)}
                   placeholder="e.g. Joint account, Estimated value"
-                  className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500"
+                  className={inputClass}
                 />
               </div>
 
-              <div className="flex gap-2 pt-1">
-                <Button onClick={handleAdd} isLoading={saving}>
-                  Save Item
-                </Button>
-                <Button variant="outline" onClick={() => setShowAddForm(false)}>
+              {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+
+              <div className="flex items-center gap-5 text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500 pt-1">
+                <button
+                  onClick={handleAdd}
+                  disabled={saving}
+                  className="text-zinc-900 dark:text-zinc-100 border-b border-zinc-900 dark:border-zinc-100 pb-0.5 disabled:opacity-50"
+                >
+                  {saving ? 'Saving…' : 'Save item'}
+                </button>
+                <button
+                  onClick={() => setShowAddForm(false)}
+                  className="hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors"
+                >
                   Cancel
-                </Button>
+                </button>
               </div>
             </div>
-          </div>
+          </section>
         )}
 
-        {error && (
-          <p className="text-sm text-red-500 mb-4">{error}</p>
-        )}
+        <section className="max-w-3xl mx-auto pb-8 border-t border-zinc-200 dark:border-zinc-900 pt-6">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <input
+              type="text"
+              placeholder="Search by name"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className={inputClass}
+            />
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value as FinancialType | '')}
+              className="border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 rounded-md px-4 py-2.5 text-sm text-zinc-700 dark:text-zinc-300 focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-100 transition-colors"
+            >
+              <option value="">All types</option>
+              {FINANCIAL_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {TYPE_LABELS[t]}s
+                </option>
+              ))}
+            </select>
+          </div>
+        </section>
 
-        {/* Type filter tabs and search */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-6">
-          <input
-            type="text"
-            placeholder="Search by name..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500"
-          />
-          <select
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value as FinancialType | '')}
-            className="px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500"
-          >
-            <option value="">All types</option>
-            {FINANCIAL_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {TYPE_LABELS[t]}s
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Items list */}
-        {loading ? (
-          <div className="flex justify-center py-12">
-            <LoadingSpinner />
-          </div>
-        ) : items.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-zinc-500 dark:text-zinc-400 mb-4">
-              {typeFilter || search
-                ? 'No items match your search.'
-                : 'No financial items yet.'}
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {items.map((item) => (
-              <FinancialItemCard
-                key={item.id}
-                item={item}
-                onDelete={handleDelete}
-                onUpdate={handleUpdate}
-                formatAmount={formatAmount}
-                currencySymbol={currencyConfig.symbol}
-              />
-            ))}
-          </div>
-        )}
+        <section className="max-w-3xl mx-auto pb-24">
+          {loading ? (
+            <div className="flex justify-center py-16">
+              <LoadingSpinner />
+            </div>
+          ) : items.length === 0 ? (
+            <div className="py-16 border-t border-zinc-200 dark:border-zinc-900">
+              <p className="text-zinc-600 dark:text-zinc-400">
+                {typeFilter || search ? 'No items match your search.' : 'No financial items yet.'}
+              </p>
+            </div>
+          ) : (
+            <ul className="divide-y divide-zinc-200 dark:divide-zinc-900 border-t border-zinc-200 dark:border-zinc-900">
+              {items.map((item) => (
+                <ItemRow
+                  key={item.id}
+                  item={item}
+                  onDelete={handleDelete}
+                  onUpdate={handleUpdate}
+                  formatAmount={formatAmount}
+                  currencySymbol={currencyConfig.symbol}
+                />
+              ))}
+            </ul>
+          )}
+        </section>
       </main>
+
+      <Footer />
     </div>
   );
 }
 
-function SummaryCard({ label, amount, color, formatAmount }: { label: string; amount: number; color?: string; formatAmount: (n: number) => string }) {
+function SummaryStat({
+  label,
+  amount,
+  tone,
+}: {
+  label: string;
+  amount: string;
+  tone: 'positive' | 'negative';
+}) {
   return (
-    <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm p-3 sm:p-4">
-      <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1 truncate">{label}</p>
-      <p className={`text-sm sm:text-lg font-bold truncate ${color || 'text-zinc-900 dark:text-white'}`}>
-        {formatAmount(amount)}
+    <div>
+      <p className="text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500 mb-2">
+        {label}
+      </p>
+      <p
+        className={`text-3xl sm:text-4xl font-semibold tracking-tight ${
+          tone === 'positive'
+            ? 'text-zinc-900 dark:text-zinc-100'
+            : 'text-rose-700 dark:text-rose-400'
+        }`}
+      >
+        {amount}
       </p>
     </div>
   );
 }
 
-function FinancialItemCard({
+function ItemRow({
   item,
   onDelete,
   onUpdate,
@@ -422,7 +454,10 @@ function FinancialItemCard({
 }: {
   item: FinancialItem;
   onDelete: (id: string) => void;
-  onUpdate: (id: string, updates: Partial<Pick<FinancialItem, 'type' | 'name' | 'amount' | 'frequency' | 'notes'>>) => void;
+  onUpdate: (
+    id: string,
+    updates: Partial<Pick<FinancialItem, 'type' | 'name' | 'amount' | 'frequency' | 'notes'>>
+  ) => void;
   formatAmount: (n: number) => string;
   currencySymbol: string;
 }) {
@@ -434,11 +469,7 @@ function FinancialItemCard({
   const [editFrequency, setEditFrequency] = useState<Frequency | ''>(item.frequency || '');
   const [editNotes, setEditNotes] = useState(item.notes || '');
 
-  const createdDate = new Date(item.created_at).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
+  const isNegative = item.type === 'debt' || item.type === 'expense';
 
   const handleSaveEdit = () => {
     const amount = parseFloat(editAmount);
@@ -449,7 +480,8 @@ function FinancialItemCard({
       type: editType,
       name: editName.trim(),
       amount,
-      frequency: (editType === 'income' || editType === 'expense') ? (editFrequency || null) : null,
+      frequency:
+        editType === 'income' || editType === 'expense' ? editFrequency || null : null,
       notes: editNotes.trim() || null,
     });
     setEditing(false);
@@ -457,19 +489,21 @@ function FinancialItemCard({
 
   if (editing) {
     return (
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm p-5">
-        <div className="space-y-3">
+      <li className="py-6">
+        <div className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">Type</label>
+            <label className="block text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500 mb-3">
+              Type
+            </label>
             <div className="flex flex-wrap gap-2">
               {FINANCIAL_TYPES.map((t) => (
                 <button
                   key={t}
                   onClick={() => setEditType(t)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  className={`px-3 py-1.5 rounded-md text-xs uppercase tracking-[0.18em] transition-colors border ${
                     editType === t
-                      ? TYPE_COLORS[t]
-                      : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                      ? 'border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100'
+                      : 'border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-500 hover:border-zinc-400 dark:hover:border-zinc-700'
                   }`}
                 >
                   {TYPE_LABELS[t]}
@@ -478,37 +512,43 @@ function FinancialItemCard({
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">Name</label>
+            <label className="block text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500 mb-2">
+              Name
+            </label>
             <input
               type="text"
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500"
+              className={inputClass}
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">Amount ({currencySymbol})</label>
+            <label className="block text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500 mb-2">
+              Amount ({currencySymbol})
+            </label>
             <input
               type="number"
               value={editAmount}
               onChange={(e) => setEditAmount(e.target.value)}
               min="0"
               step="0.01"
-              className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500"
+              className={inputClass}
             />
           </div>
           {(editType === 'income' || editType === 'expense') && (
             <div>
-              <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">Frequency</label>
+              <label className="block text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500 mb-3">
+                Frequency
+              </label>
               <div className="flex flex-wrap gap-2">
                 {FREQUENCY_OPTIONS.map((f) => (
                   <button
                     key={f}
                     onClick={() => setEditFrequency(editFrequency === f ? '' : f)}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    className={`px-3 py-1.5 rounded-md text-xs uppercase tracking-[0.18em] transition-colors border ${
                       editFrequency === f
-                        ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900'
-                        : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                        ? 'border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100'
+                        : 'border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-500 hover:border-zinc-400 dark:hover:border-zinc-700'
                     }`}
                   >
                     {FREQUENCY_LABELS[f]}
@@ -518,88 +558,103 @@ function FinancialItemCard({
             </div>
           )}
           <div>
-            <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">Notes</label>
+            <label className="block text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500 mb-2">
+              Notes
+            </label>
             <input
               type="text"
               value={editNotes}
               onChange={(e) => setEditNotes(e.target.value)}
-              placeholder="Add a note..."
-              className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500"
+              placeholder="Add a note…"
+              className={inputClass}
             />
           </div>
-          <div className="flex gap-2 pt-1">
-            <Button size="sm" onClick={handleSaveEdit}>Save</Button>
-            <Button size="sm" variant="outline" onClick={() => setEditing(false)}>Cancel</Button>
+          <div className="flex items-center gap-5 text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500 pt-1">
+            <button
+              onClick={handleSaveEdit}
+              className="text-zinc-900 dark:text-zinc-100 border-b border-zinc-900 dark:border-zinc-100 pb-0.5"
+            >
+              Save
+            </button>
+            <button
+              onClick={() => setEditing(false)}
+              className="hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors"
+            >
+              Cancel
+            </button>
           </div>
         </div>
-      </div>
+      </li>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm p-5">
-      <div className="flex items-start justify-between gap-3">
+    <li className="py-5">
+      <div className="flex items-start justify-between gap-6">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <h3 className="font-medium text-zinc-900 dark:text-white truncate">
-              {item.name}
-            </h3>
-            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${TYPE_COLORS[item.type]}`}>
-              {TYPE_LABELS[item.type]}
-            </span>
-          </div>
-          <div className="flex items-center gap-2 mt-1">
-            <span className="text-lg font-bold text-zinc-900 dark:text-white">
+          <p className="text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500">
+            {TYPE_LABELS[item.type]}
+          </p>
+          <h3 className="mt-1 text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+            {item.name}
+          </h3>
+          {item.notes && (
+            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{item.notes}</p>
+          )}
+        </div>
+        <div className="flex flex-col items-end gap-3 shrink-0">
+          <div className="text-right">
+            <p
+              className={`text-2xl font-semibold tracking-tight ${
+                isNegative
+                  ? 'text-rose-700 dark:text-rose-400'
+                  : 'text-zinc-900 dark:text-zinc-100'
+              }`}
+            >
               {formatAmount(Number(item.amount))}
-            </span>
+            </p>
             {item.frequency && (
-              <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                / {FREQUENCY_LABELS[item.frequency].toLowerCase()}
-              </span>
+              <p className="text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500 mt-1">
+                {FREQUENCY_SUFFIX[item.frequency]}
+              </p>
             )}
           </div>
-          <div className="flex items-center gap-2 mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-            <span>Added {createdDate}</span>
-          </div>
-          {item.notes && (
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2">
-              {item.notes}
-            </p>
-          )}
-        </div>
-
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            onClick={() => setEditing(true)}
-            className="text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
-          >
-            Edit
-          </button>
-          {confirmDelete ? (
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => { onDelete(item.id); setConfirmDelete(false); }}
-                className="text-sm text-red-500 hover:text-red-700"
-              >
-                Confirm
-              </button>
-              <button
-                onClick={() => setConfirmDelete(false)}
-                className="text-sm text-zinc-500 hover:text-zinc-700"
-              >
-                Cancel
-              </button>
-            </div>
-          ) : (
+          <div className="flex items-center gap-4 text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500">
             <button
-              onClick={() => setConfirmDelete(true)}
-              className="text-sm text-red-500 hover:text-red-700"
+              onClick={() => setEditing(true)}
+              className="hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors"
             >
-              Delete
+              Edit
             </button>
-          )}
+            {confirmDelete ? (
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => {
+                    onDelete(item.id);
+                    setConfirmDelete(false);
+                  }}
+                  className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors"
+                >
+                  Confirm
+                </button>
+                <button
+                  onClick={() => setConfirmDelete(false)}
+                  className="hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setConfirmDelete(true)}
+                className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors"
+              >
+                Delete
+              </button>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </li>
   );
 }

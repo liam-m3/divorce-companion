@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Header from '@/components/dashboard/Header';
-import Button from '@/components/ui/Button';
+import Footer from '@/components/dashboard/Footer';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 interface BriefStats {
@@ -53,7 +54,6 @@ export default function BriefPage() {
   const [copied, setCopied] = useState(false);
   const [generatedAt, setGeneratedAt] = useState<string | null>(null);
 
-  // Fetch data counts so user can see what'll be included
   useEffect(() => {
     async function fetchCounts() {
       const supabase = createClient();
@@ -80,7 +80,7 @@ export default function BriefPage() {
     }
 
     fetchCounts();
-  }, []);
+  }, [router]);
 
   async function handleGenerate() {
     setGenerating(true);
@@ -147,141 +147,155 @@ export default function BriefPage() {
     ? stats.journalCount + stats.documentCount + stats.financialCount + stats.timelineCount
     : 0;
 
+  const generatedTimestamp = generatedAt
+    ? new Date(generatedAt).toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : null;
+
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100">
       <Header />
 
-      <main className="max-w-3xl mx-auto px-4 py-8">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
-            Full Situation Brief
+      <main className="px-6">
+        <section className="max-w-3xl mx-auto pt-16 sm:pt-20 pb-12">
+          <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight leading-[1.05]">
+            Brief
           </h1>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-            Generate a comprehensive professional brief from all your data
+          <p className="mt-4 text-lg text-zinc-600 dark:text-zinc-400 max-w-xl">
+            One document that pulls your journal, timeline, finances and vault into a
+            readable summary.
           </p>
-        </div>
+        </section>
 
-        {/* Data overview cards */}
         {loading ? (
-          <div className="flex justify-center py-12">
-            <LoadingSpinner />
-          </div>
+          <section className="max-w-3xl mx-auto py-16 border-t border-zinc-200 dark:border-zinc-900">
+            <div className="flex justify-center">
+              <LoadingSpinner />
+            </div>
+          </section>
         ) : (
           <>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-              <DataCard label="Journal Entries" count={stats?.journalCount || 0} href="/journal" />
-              <DataCard label="Timeline Events" count={stats?.timelineCount || 0} href="/timeline" />
-              <DataCard label="Financial Items" count={stats?.financialCount || 0} href="/finances" />
-              <DataCard label="Documents" count={stats?.documentCount || 0} href="/vault" />
-            </div>
-
-            {/* Generate button or brief display */}
-            {!brief ? (
-              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm p-8 text-center">
-                {totalItems === 0 ? (
-                  <>
-                    <p className="text-zinc-500 dark:text-zinc-400 mb-2">
-                      No data to generate a brief from yet.
-                    </p>
-                    <p className="text-sm text-zinc-400 dark:text-zinc-500">
-                      Start by adding journal entries, timeline events, or financial items.
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-zinc-600 dark:text-zinc-300 mb-2">
-                      AI will analyse <span className="font-semibold">{totalItems} items</span> across your journal, timeline, finances, and documents to generate a professional situation brief.
-                    </p>
-                    <p className="text-sm text-zinc-400 dark:text-zinc-500 mb-6">
-                      This typically takes 15-30 seconds depending on how much data you have.
-                    </p>
-
-                    <Button onClick={handleGenerate} isLoading={generating}>
-                      {generating ? 'Generating Brief...' : 'Generate Full Brief'}
-                    </Button>
-
-                    {generating && (
-                      <p className="text-sm text-zinc-400 dark:text-zinc-500 mt-4 animate-pulse">
-                        Analysing your data and generating a comprehensive brief...
-                      </p>
-                    )}
-                  </>
-                )}
-
-                {error && (
-                  <p className="mt-4 text-sm text-red-500">{error}</p>
-                )}
+            <section className="max-w-3xl mx-auto py-12 border-t border-zinc-200 dark:border-zinc-900">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-8">
+                <Stat label="Journal entries" count={stats?.journalCount || 0} href="/journal" />
+                <Stat label="Timeline events" count={stats?.timelineCount || 0} href="/timeline" />
+                <Stat label="Financial items" count={stats?.financialCount || 0} href="/finances" />
+                <Stat label="Documents" count={stats?.documentCount || 0} href="/vault" />
               </div>
-            ) : (
-              <div className="space-y-4">
-                {/* Brief content */}
-                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
-                      Your Situation Brief
-                    </h2>
-                    {generatedAt && (
-                      <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                        Generated {new Date(generatedAt).toLocaleDateString('en-GB', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </span>
-                    )}
-                  </div>
+            </section>
 
-                  <div className="prose prose-sm dark:prose-invert max-w-none">
-                    <p className="text-sm text-zinc-800 dark:text-zinc-200 whitespace-pre-wrap leading-relaxed">
-                      {brief}
-                    </p>
-                  </div>
-
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-4 italic">
-                    This is an AI-generated brief. Please review carefully for accuracy before sharing with any professional.
+            <section className="max-w-3xl mx-auto py-12 border-t border-zinc-200 dark:border-zinc-900">
+              {totalItems === 0 ? (
+                <p className="text-lg text-zinc-700 dark:text-zinc-300 leading-[1.7]">
+                  Nothing to generate yet. Add journal entries, timeline events, or
+                  financial items first.
+                </p>
+              ) : (
+                <>
+                  <p className="text-lg text-zinc-700 dark:text-zinc-300 leading-[1.7]">
+                    When you&apos;re ready, the app will pull{' '}
+                    <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                      {totalItems} {totalItems === 1 ? 'item' : 'items'}
+                    </span>{' '}
+                    into one document. Usually takes 15 to 30 seconds.
                   </p>
-
-                  {/* Actions */}
-                  <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-700">
-                    <Button size="sm" variant="outline" onClick={handleCopy}>
-                      {copied ? 'Copied!' : 'Copy Brief'}
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={handleExportPDF}>
-                      Export PDF
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={handleGenerate} isLoading={generating}>
-                      Regenerate
-                    </Button>
+                  <div className="mt-6">
+                    <button
+                      onClick={handleGenerate}
+                      disabled={generating}
+                      className="inline-flex items-baseline gap-2 text-base font-medium border-b border-zinc-900 dark:border-zinc-100 pb-1 hover:text-zinc-600 dark:hover:text-zinc-400 hover:border-zinc-600 dark:hover:border-zinc-400 transition-colors disabled:opacity-50"
+                    >
+                      {generating ? 'Generating…' : brief ? 'Regenerate brief' : 'Generate full brief'}
+                      {!generating && <span aria-hidden>→</span>}
+                    </button>
                   </div>
+                  {error && (
+                    <p className="mt-6 text-sm text-red-600 dark:text-red-400">{error}</p>
+                  )}
+                </>
+              )}
+            </section>
+
+            {brief && (
+              <section className="max-w-3xl mx-auto py-12 border-t border-zinc-200 dark:border-zinc-900">
+                <div className="flex items-baseline justify-between gap-4 flex-wrap mb-8">
+                  <p className="text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500">
+                    Your brief
+                  </p>
+                  {generatedTimestamp && (
+                    <p className="text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500">
+                      Generated {generatedTimestamp}
+                    </p>
+                  )}
                 </div>
 
-                {/* Data sources summary */}
+                <article className="border border-zinc-200 dark:border-zinc-900 bg-white dark:bg-zinc-900/40 rounded-lg p-8 sm:p-10">
+                  <p className="text-[15px] leading-[1.8] text-zinc-800 dark:text-zinc-200 whitespace-pre-wrap">
+                    {brief}
+                  </p>
+                </article>
+
+                <p className="mt-4 text-xs text-zinc-500 dark:text-zinc-500">
+                  Review carefully before sharing with any professional.
+                </p>
+
+                <div className="mt-8 flex items-center gap-5 text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500">
+                  <button
+                    onClick={handleCopy}
+                    className="hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors"
+                  >
+                    {copied ? 'Copied' : 'Copy'}
+                  </button>
+                  <button
+                    onClick={handleExportPDF}
+                    className="hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors"
+                  >
+                    Export PDF
+                  </button>
+                  <button
+                    onClick={handleGenerate}
+                    disabled={generating}
+                    className="hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors disabled:opacity-50"
+                  >
+                    {generating ? 'Regenerating…' : 'Regenerate'}
+                  </button>
+                </div>
+
                 {stats && (
-                  <div className="bg-zinc-100 dark:bg-zinc-800/50 rounded-lg p-4">
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                      Brief generated from: {stats.journalCount} journal {stats.journalCount === 1 ? 'entry' : 'entries'}, {stats.timelineCount} timeline {stats.timelineCount === 1 ? 'event' : 'events'}, {stats.financialCount} financial {stats.financialCount === 1 ? 'item' : 'items'}, {stats.documentCount} {stats.documentCount === 1 ? 'document' : 'documents'}
-                    </p>
-                  </div>
+                  <p className="mt-8 text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500">
+                    Built from {stats.journalCount} journal{' '}
+                    {stats.journalCount === 1 ? 'entry' : 'entries'} · {stats.timelineCount}{' '}
+                    timeline {stats.timelineCount === 1 ? 'event' : 'events'} ·{' '}
+                    {stats.financialCount} financial{' '}
+                    {stats.financialCount === 1 ? 'item' : 'items'} · {stats.documentCount}{' '}
+                    {stats.documentCount === 1 ? 'document' : 'documents'}
+                  </p>
                 )}
-              </div>
+              </section>
             )}
           </>
         )}
       </main>
+
+      <Footer />
     </div>
   );
 }
 
-function DataCard({ label, count, href }: { label: string; count: number; href: string }) {
+function Stat({ label, count, href }: { label: string; count: number; href: string }) {
   return (
-    <a
-      href={href}
-      className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm p-4 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors"
-    >
-      <p className="text-2xl font-bold text-zinc-900 dark:text-white">{count}</p>
-      <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">{label}</p>
-    </a>
+    <Link href={href} className="block group">
+      <p className="text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500 mb-2">
+        {label}
+      </p>
+      <p className="text-5xl sm:text-6xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 group-hover:text-zinc-600 dark:group-hover:text-zinc-400 transition-colors">
+        {count}
+      </p>
+    </Link>
   );
 }
