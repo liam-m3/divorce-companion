@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Header from '@/components/dashboard/Header';
-import Button from '@/components/ui/Button';
+import Footer from '@/components/dashboard/Footer';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { TIMELINE_CATEGORIES } from '@/types';
 import type { TimelineEvent, TimelineCategory } from '@/types';
@@ -17,21 +17,16 @@ const CATEGORY_LABELS: Record<TimelineCategory, string> = {
   children: 'Children',
 };
 
-const CATEGORY_COLORS: Record<TimelineCategory, string> = {
-  legal: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
-  financial: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
-  personal: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-  emotional: 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400',
-  children: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
+const CATEGORY_DOT: Record<TimelineCategory, string> = {
+  legal: 'bg-purple-400',
+  financial: 'bg-emerald-400',
+  personal: 'bg-blue-400',
+  emotional: 'bg-rose-400',
+  children: 'bg-amber-400',
 };
 
-const CATEGORY_DOT_COLORS: Record<TimelineCategory, string> = {
-  legal: 'bg-purple-500',
-  financial: 'bg-emerald-500',
-  personal: 'bg-blue-500',
-  emotional: 'bg-rose-500',
-  children: 'bg-amber-500',
-};
+const inputClass =
+  'w-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 rounded-md px-4 py-2.5 text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-100 transition-colors';
 
 export default function TimelinePage() {
   const router = useRouter();
@@ -45,7 +40,6 @@ export default function TimelinePage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [error, setError] = useState('');
 
-  // Add form state
   const [newTitle, setNewTitle] = useState('');
   const [newDescription, setNewDescription] = useState('');
   const [newDate, setNewDate] = useState(new Date().toISOString().split('T')[0]);
@@ -120,7 +114,6 @@ export default function TimelinePage() {
       return;
     }
 
-    // Reset form
     setNewTitle('');
     setNewDescription('');
     setNewDate(new Date().toISOString().split('T')[0]);
@@ -143,7 +136,10 @@ export default function TimelinePage() {
     fetchEvents();
   }
 
-  async function handleUpdate(eventId: string, updates: Partial<Pick<TimelineEvent, 'title' | 'description' | 'event_date' | 'category'>>) {
+  async function handleUpdate(
+    eventId: string,
+    updates: Partial<Pick<TimelineEvent, 'title' | 'description' | 'event_date' | 'category'>>
+  ) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
@@ -156,43 +152,40 @@ export default function TimelinePage() {
     fetchEvents();
   }
 
-  // Group events by year for the timeline view
   const groupedByYear: Record<string, TimelineEvent[]> = {};
   events.forEach((event) => {
     const year = new Date(event.event_date).getFullYear().toString();
-    if (!groupedByYear[year]) {
-      groupedByYear[year] = [];
-    }
+    if (!groupedByYear[year]) groupedByYear[year] = [];
     groupedByYear[year].push(event);
   });
 
   const sortedYears = Object.keys(groupedByYear).sort((a, b) => Number(b) - Number(a));
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100">
       <Header />
 
-      <main className="max-w-3xl mx-auto px-4 py-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
+      <main className="px-6">
+        <section className="max-w-3xl mx-auto pt-16 sm:pt-20 pb-12">
+          <div className="flex items-end justify-between gap-4 flex-wrap">
+            <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight leading-[1.05]">
               Timeline
             </h1>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-              {loading ? 'Loading...' : `${events.length} event${events.length !== 1 ? 's' : ''}`} &middot; Key moments in your journey
-            </p>
+            <button
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="inline-flex items-baseline gap-2 text-base font-medium border-b border-zinc-900 dark:border-zinc-100 pb-1 hover:text-zinc-600 dark:hover:text-zinc-400 hover:border-zinc-600 dark:hover:border-zinc-400 transition-colors"
+            >
+              {showAddForm ? 'Cancel' : 'Add event'}
+              {!showAddForm && <span aria-hidden>→</span>}
+            </button>
           </div>
-          <Button className="w-full sm:w-auto shrink-0" onClick={() => setShowAddForm(!showAddForm)}>
-            {showAddForm ? 'Cancel' : 'Add Event'}
-          </Button>
-        </div>
+        </section>
 
-        {/* Add event form */}
         {showAddForm && (
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm p-5 mb-6">
-            <div className="space-y-4">
+          <section className="max-w-3xl mx-auto pb-10 border-t border-zinc-200 dark:border-zinc-900 pt-8">
+            <div className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                <label className="block text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500 mb-2">
                   What happened?
                 </label>
                 <input
@@ -200,25 +193,25 @@ export default function TimelinePage() {
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   placeholder="e.g. Filed for divorce, Custody hearing, Moved out"
-                  className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500"
+                  className={inputClass}
                   autoFocus
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                  When did it happen?
+                <label className="block text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500 mb-2">
+                  When
                 </label>
                 <input
                   type="date"
                   value={newDate}
                   onChange={(e) => setNewDate(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500"
+                  className={inputClass}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+                <label className="block text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500 mb-3">
                   Category
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -226,12 +219,13 @@ export default function TimelinePage() {
                     <button
                       key={cat}
                       onClick={() => setNewCategory(newCategory === cat ? '' : cat)}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-xs uppercase tracking-[0.18em] transition-colors border ${
                         newCategory === cat
-                          ? CATEGORY_COLORS[cat]
-                          : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                          ? 'border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100'
+                          : 'border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-500 hover:border-zinc-400 dark:hover:border-zinc-700'
                       }`}
                     >
+                      <span className={`w-1.5 h-1.5 rounded-full ${CATEGORY_DOT[cat]}`} />
                       {CATEGORY_LABELS[cat]}
                     </button>
                   ))}
@@ -239,110 +233,123 @@ export default function TimelinePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                <label className="block text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500 mb-2">
                   Details (optional)
                 </label>
                 <textarea
                   value={newDescription}
                   onChange={(e) => setNewDescription(e.target.value)}
-                  placeholder="Add any extra details, notes, or context..."
+                  placeholder="Any extra context…"
                   rows={3}
-                  className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500 resize-none"
+                  className={`${inputClass} resize-none`}
                 />
               </div>
 
-              {error && (
-                <p className="text-sm text-red-500">{error}</p>
-              )}
+              {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
-              <div className="flex gap-2 pt-1">
-                <Button onClick={handleAdd} isLoading={saving}>
-                  Save Event
-                </Button>
-                <Button variant="outline" onClick={() => { setShowAddForm(false); setError(''); }}>
+              <div className="flex items-center gap-5 text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500 pt-1">
+                <button
+                  onClick={handleAdd}
+                  disabled={saving}
+                  className="text-zinc-900 dark:text-zinc-100 border-b border-zinc-900 dark:border-zinc-100 pb-0.5 disabled:opacity-50"
+                >
+                  {saving ? 'Saving…' : 'Save event'}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowAddForm(false);
+                    setError('');
+                  }}
+                  className="hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors"
+                >
                   Cancel
-                </Button>
+                </button>
               </div>
             </div>
-          </div>
+          </section>
         )}
 
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-6">
-          <input
-            type="text"
-            placeholder="Search events..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500"
-          />
-          <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value as TimelineCategory | '')}
-            className="px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500"
-          >
-            <option value="">All categories</option>
-            {TIMELINE_CATEGORIES.map((cat) => (
-              <option key={cat} value={cat}>
-                {CATEGORY_LABELS[cat]}
-              </option>
-            ))}
-          </select>
-        </div>
+        <section className="max-w-3xl mx-auto pb-8 border-t border-zinc-200 dark:border-zinc-900 pt-6">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <input
+              type="text"
+              placeholder="Search events"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className={inputClass}
+            />
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value as TimelineCategory | '')}
+              className="border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 rounded-md px-4 py-2.5 text-sm text-zinc-700 dark:text-zinc-300 focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-100 transition-colors"
+            >
+              <option value="">All categories</option>
+              {TIMELINE_CATEGORIES.map((cat) => (
+                <option key={cat} value={cat}>
+                  {CATEGORY_LABELS[cat]}
+                </option>
+              ))}
+            </select>
+          </div>
+        </section>
 
-
-        {/* Timeline view */}
         {loading ? (
-          <div className="flex justify-center py-12">
-            <LoadingSpinner />
-          </div>
+          <section className="max-w-3xl mx-auto pb-24">
+            <div className="flex justify-center py-16">
+              <LoadingSpinner />
+            </div>
+          </section>
         ) : events.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-zinc-500 dark:text-zinc-400 mb-4">
-              {categoryFilter || search
-                ? 'No events match your search.'
-                : 'No timeline events yet.'}
-            </p>
-          </div>
+          <section className="max-w-3xl mx-auto pb-24">
+            <div className="py-16 border-t border-zinc-200 dark:border-zinc-900">
+              <p className="text-zinc-600 dark:text-zinc-400">
+                {categoryFilter || search ? 'No events match your search.' : 'No timeline events yet.'}
+              </p>
+            </div>
+          </section>
         ) : (
-          <div className="space-y-8">
-            {sortedYears.map((year) => (
-              <div key={year}>
-                <h2 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4 sticky top-0 bg-zinc-50 dark:bg-zinc-950 py-2 z-10">
+          sortedYears.map((year) => (
+            <section key={year} className="max-w-3xl mx-auto pb-12">
+              <div className="flex items-baseline gap-4 pt-6 border-t border-zinc-200 dark:border-zinc-900">
+                <p className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
                   {year}
-                </h2>
-                <div className="relative">
-                  {/* Timeline line */}
-                  <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-zinc-200 dark:bg-zinc-700" />
-
-                  <div className="space-y-4">
-                    {groupedByYear[year].map((event) => (
-                      <TimelineEventCard
-                        key={event.id}
-                        event={event}
-                        onDelete={handleDelete}
-                        onUpdate={handleUpdate}
-                      />
-                    ))}
-                  </div>
-                </div>
+                </p>
+                <p className="text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500">
+                  {groupedByYear[year].length} event
+                  {groupedByYear[year].length !== 1 ? 's' : ''}
+                </p>
               </div>
-            ))}
-          </div>
+              <ul className="mt-6 divide-y divide-zinc-200 dark:divide-zinc-900">
+                {groupedByYear[year].map((event) => (
+                  <TimelineEventRow
+                    key={event.id}
+                    event={event}
+                    onDelete={handleDelete}
+                    onUpdate={handleUpdate}
+                  />
+                ))}
+              </ul>
+            </section>
+          ))
         )}
       </main>
+
+      <Footer />
     </div>
   );
 }
 
-function TimelineEventCard({
+function TimelineEventRow({
   event,
   onDelete,
   onUpdate,
 }: {
   event: TimelineEvent;
   onDelete: (id: string) => void;
-  onUpdate: (id: string, updates: Partial<Pick<TimelineEvent, 'title' | 'description' | 'event_date' | 'category'>>) => void;
+  onUpdate: (
+    id: string,
+    updates: Partial<Pick<TimelineEvent, 'title' | 'description' | 'event_date' | 'category'>>
+  ) => void;
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -374,123 +381,133 @@ function TimelineEventCard({
 
   if (editing) {
     return (
-      <div className="relative pl-10">
-        {/* Timeline dot */}
-        <div className="absolute left-2.5 top-5 w-3 h-3 rounded-full bg-zinc-400 dark:bg-zinc-500 border-2 border-zinc-50 dark:border-zinc-950 z-10" />
-
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm p-5">
-          <div className="space-y-3">
-            <div>
-              <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">Title</label>
-              <input
-                type="text"
-                value={editTitle}
-                onChange={(e) => setEditTitle(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">Date</label>
-              <input
-                type="date"
-                value={editDate}
-                onChange={(e) => setEditDate(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2">Category</label>
-              <div className="flex flex-wrap gap-2">
-                {TIMELINE_CATEGORIES.map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setEditCategory(editCategory === cat ? '' : cat)}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                      editCategory === cat
-                        ? CATEGORY_COLORS[cat]
-                        : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
-                    }`}
-                  >
-                    {CATEGORY_LABELS[cat]}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">Details</label>
-              <textarea
-                value={editDescription}
-                onChange={(e) => setEditDescription(e.target.value)}
-                placeholder="Add details..."
-                rows={3}
-                className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500 resize-none"
-              />
-            </div>
-            <div className="flex gap-2 pt-1">
-              <Button size="sm" onClick={handleSaveEdit}>Save</Button>
-              <Button size="sm" variant="outline" onClick={() => setEditing(false)}>Cancel</Button>
+      <li className="py-6">
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500 mb-2">
+              Title
+            </label>
+            <input
+              type="text"
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="block text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500 mb-2">
+              Date
+            </label>
+            <input
+              type="date"
+              value={editDate}
+              onChange={(e) => setEditDate(e.target.value)}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="block text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500 mb-3">
+              Category
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {TIMELINE_CATEGORIES.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setEditCategory(editCategory === cat ? '' : cat)}
+                  className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-xs uppercase tracking-[0.18em] transition-colors border ${
+                    editCategory === cat
+                      ? 'border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100'
+                      : 'border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-500 hover:border-zinc-400 dark:hover:border-zinc-700'
+                  }`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full ${CATEGORY_DOT[cat]}`} />
+                  {CATEGORY_LABELS[cat]}
+                </button>
+              ))}
             </div>
           </div>
+          <div>
+            <label className="block text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500 mb-2">
+              Details
+            </label>
+            <textarea
+              value={editDescription}
+              onChange={(e) => setEditDescription(e.target.value)}
+              rows={3}
+              className={`${inputClass} resize-none`}
+            />
+          </div>
+          <div className="flex items-center gap-5 text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500 pt-1">
+            <button
+              onClick={handleSaveEdit}
+              className="text-zinc-900 dark:text-zinc-100 border-b border-zinc-900 dark:border-zinc-100 pb-0.5"
+            >
+              Save
+            </button>
+            <button
+              onClick={() => setEditing(false)}
+              className="hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
-      </div>
+      </li>
     );
   }
 
   return (
-    <div className="relative pl-10">
-      {/* Timeline dot */}
-      <div className={`absolute left-2.5 top-5 w-3 h-3 rounded-full border-2 border-zinc-50 dark:border-zinc-950 z-10 ${
-        event.category
-          ? CATEGORY_DOT_COLORS[event.category]
-          : 'bg-zinc-400 dark:bg-zinc-500'
-      }`} />
-
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                {formattedDate}
+    <li className="py-6">
+      <div className="flex items-start justify-between gap-6">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-3 text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500">
+            {event.category && (
+              <span className="flex items-center gap-2">
+                <span className={`w-1.5 h-1.5 rounded-full ${CATEGORY_DOT[event.category]}`} />
+                {CATEGORY_LABELS[event.category]}
               </span>
-              {isFuture && (
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400">
-                  Upcoming
-                </span>
-              )}
-              {event.category && (
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${CATEGORY_COLORS[event.category]}`}>
-                  {CATEGORY_LABELS[event.category]}
-                </span>
-              )}
-            </div>
-            <h3 className="font-medium text-zinc-900 dark:text-white mt-1">
-              {event.title}
-            </h3>
-            {event.description && (
-              <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2 whitespace-pre-wrap">
-                {event.description}
-              </p>
+            )}
+            {isFuture && (
+              <>
+                {event.category && <span className="text-zinc-300 dark:text-zinc-700">·</span>}
+                <span className="text-zinc-700 dark:text-zinc-300">Upcoming</span>
+              </>
             )}
           </div>
-
-          <div className="flex items-center gap-2 shrink-0">
+          <h3 className="mt-2 text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+            {event.title}
+          </h3>
+          {event.description && (
+            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed whitespace-pre-wrap">
+              {event.description}
+            </p>
+          )}
+        </div>
+        <div className="flex flex-col items-end gap-3 shrink-0">
+          <span className="text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500">
+            {formattedDate}
+          </span>
+          <div className="flex items-center gap-4 text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500">
             <button
               onClick={() => setEditing(true)}
-              className="text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
+              className="hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors"
             >
               Edit
             </button>
             {confirmDelete ? (
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-3">
                 <button
-                  onClick={() => { onDelete(event.id); setConfirmDelete(false); }}
-                  className="text-sm text-red-500 hover:text-red-700"
+                  onClick={() => {
+                    onDelete(event.id);
+                    setConfirmDelete(false);
+                  }}
+                  className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors"
                 >
                   Confirm
                 </button>
                 <button
                   onClick={() => setConfirmDelete(false)}
-                  className="text-sm text-zinc-500 hover:text-zinc-700"
+                  className="hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors"
                 >
                   Cancel
                 </button>
@@ -498,7 +515,7 @@ function TimelineEventCard({
             ) : (
               <button
                 onClick={() => setConfirmDelete(true)}
-                className="text-sm text-red-500 hover:text-red-700"
+                className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors"
               >
                 Delete
               </button>
@@ -506,6 +523,6 @@ function TimelineEventCard({
           </div>
         </div>
       </div>
-    </div>
+    </li>
   );
 }

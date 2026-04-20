@@ -13,8 +13,11 @@
 # testing
 /coverage
 
-# screenshots
+# screenshots and design review artefacts
 /screenshots
+/test-design-ui
+/.playwright-mcp
+/*.png
 
 # next.js
 /.next/

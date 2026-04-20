@@ -4,9 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import Card from '@/components/ui/Card';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -20,7 +17,6 @@ export default function SignupPage() {
     e.preventDefault();
     setError('');
 
-    // Validation
     if (!email || !password || !confirmPassword) {
       setError('Please fill in all fields');
       return;
@@ -50,86 +46,136 @@ export default function SignupPage() {
         return;
       }
 
-      // Refresh to update session, then redirect to onboarding
       router.refresh();
       router.push('/onboarding');
-    } catch {
-      setError('An unexpected error occurred');
+    } catch (err) {
+      console.error('Signup error:', err);
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 px-4">
-      <Card className="w-full max-w-md p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
-            Create your account
-          </h1>
-          <p className="text-zinc-600 dark:text-zinc-400 mt-2">
-            Start your journey with Divorce Companion
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            label="Email"
-            type="email"
-            placeholder="you@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-
-          <Input
-            label="Password"
-            type="password"
-            placeholder="At least 8 characters"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-
-          <Input
-            label="Confirm Password"
-            type="password"
-            placeholder="Confirm your password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-          />
-
-          {error && (
-            <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm">
-              {error}
-            </div>
-          )}
-
-          <Button
-            type="submit"
-            className="w-full"
-            size="lg"
-            isLoading={isLoading}
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100">
+      <header className="px-6 pt-8 sm:pt-12">
+        <div className="max-w-2xl mx-auto flex items-center justify-between text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500">
+          <Link
+            href="/"
+            className="hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors"
           >
-            Create Account
-          </Button>
-        </form>
-
-        <p className="text-center mt-6 text-zinc-600 dark:text-zinc-400">
-          Already have an account?{' '}
+            ← Divorce Companion
+          </Link>
           <Link
             href="/login"
-            className="text-zinc-900 dark:text-white font-medium hover:underline"
+            className="hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors"
           >
             Log in
           </Link>
-        </p>
+        </div>
+      </header>
 
-        <p className="text-xs text-zinc-400 dark:text-zinc-500 text-center mt-4">
-          Your data is private and encrypted. Only you can access your information.
-        </p>
-      </Card>
+      <main className="px-6">
+        <section className="max-w-sm mx-auto pt-20 sm:pt-28 pb-24">
+          <p className="text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500 mb-6">
+            Sign up
+          </p>
+          <h1 className="text-4xl font-semibold tracking-tight leading-[1.1]">
+            Create an account.
+          </h1>
+
+          <form onSubmit={handleSubmit} className="mt-12 space-y-6">
+            <Field
+              label="Email"
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={setEmail}
+              required
+            />
+            <Field
+              label="Password"
+              type="password"
+              placeholder="At least 8 characters"
+              value={password}
+              onChange={setPassword}
+              required
+            />
+            <Field
+              label="Confirm password"
+              type="password"
+              placeholder="••••••••"
+              value={confirmPassword}
+              onChange={setConfirmPassword}
+              required
+            />
+
+            {error && (
+              <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+            )}
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full border border-zinc-900 dark:border-zinc-100 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 py-3 text-sm font-medium hover:bg-zinc-800 dark:hover:bg-white transition-colors rounded-md disabled:opacity-50"
+            >
+              {isLoading ? 'Creating account…' : 'Create account →'}
+            </button>
+          </form>
+
+          <p className="mt-8 text-xs text-zinc-500 dark:text-zinc-500 leading-relaxed">
+            Your data is private. Only you can see it.
+          </p>
+
+          <p className="mt-10 text-sm text-zinc-600 dark:text-zinc-400">
+            Already have an account?{' '}
+            <Link
+              href="/login"
+              className="border-b border-zinc-900 dark:border-zinc-100 pb-0.5 hover:text-zinc-600 dark:hover:text-zinc-400 hover:border-zinc-600 dark:hover:border-zinc-400 transition-colors"
+            >
+              Log in
+            </Link>
+          </p>
+        </section>
+      </main>
+
+      <footer className="px-6 pb-12">
+        <div className="max-w-2xl mx-auto pt-8 border-t border-zinc-200 dark:border-zinc-900 text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500">
+          <span>© 2026 Divorce Companion</span>
+        </div>
+      </footer>
     </div>
+  );
+}
+
+function Field({
+  label,
+  type,
+  placeholder,
+  value,
+  onChange,
+  required,
+}: {
+  label: string;
+  type: string;
+  placeholder: string;
+  value: string;
+  onChange: (v: string) => void;
+  required?: boolean;
+}) {
+  return (
+    <label className="block">
+      <span className="block text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500 mb-2">
+        {label}
+      </span>
+      <input
+        type={type}
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        required={required}
+        className="w-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 rounded-md px-4 py-3 text-base placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-100 transition-colors"
+      />
+    </label>
   );
 }

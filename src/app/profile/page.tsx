@@ -12,12 +12,11 @@ import {
   PRIORITY_OPTIONS,
 } from '@/lib/onboarding-config';
 
-import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
-import Select from '@/components/ui/Select';
-import Input from '@/components/ui/Input';
-import OptionCard from '@/components/onboarding/OptionCard';
 import Header from '@/components/dashboard/Header';
+import Footer from '@/components/dashboard/Footer';
+
+const inputClass =
+  'w-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 rounded-md px-4 py-2.5 text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-100 transition-colors';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -31,7 +30,6 @@ export default function ProfilePage() {
   const [passwordMessage, setPasswordMessage] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  // Form state
   const [displayName, setDisplayName] = useState('');
   const [country, setCountry] = useState('');
   const [relationshipType, setRelationshipType] = useState<RelationshipType | ''>('');
@@ -118,8 +116,9 @@ export default function ProfilePage() {
       }
 
       setSuccess('Profile updated successfully');
-    } catch {
-      setError('An unexpected error occurred');
+    } catch (err) {
+      console.error('Profile save error:', err);
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
     } finally {
       setIsSaving(false);
     }
@@ -153,15 +152,15 @@ export default function ProfilePage() {
         setNewPassword('');
         setConfirmNewPassword('');
       }
-    } catch {
-      setPasswordMessage('An unexpected error occurred');
+    } catch (err) {
+      console.error('Password update error:', err);
+      setPasswordMessage(err instanceof Error ? err.message : 'An unexpected error occurred');
     } finally {
       setPasswordSaving(false);
     }
   };
 
   const handleDeleteAccount = async () => {
-    // Sign out — actual account deletion requires a server-side admin call
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push('/');
@@ -169,122 +168,109 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100">
         <Header />
-        <div className="flex items-center justify-center py-24">
-          <p className="text-zinc-500">Loading...</p>
+        <div className="px-6">
+          <div className="max-w-3xl mx-auto py-24">
+            <p className="text-sm text-zinc-500 dark:text-zinc-500">Loading…</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100">
       <Header />
-      <div className="max-w-3xl mx-auto py-8 px-4">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
-            Edit Profile
+
+      <main className="px-6">
+        <section className="max-w-3xl mx-auto pt-16 sm:pt-20 pb-12">
+          <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight leading-[1.05]">
+            Profile
           </h1>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-            Update your details and preferences
+          <p className="mt-4 text-lg text-zinc-600 dark:text-zinc-400">
+            Keep this up to date and the brief reads better.
           </p>
-        </div>
+        </section>
 
-        <div className="space-y-6">
-          {/* Display Name */}
-          <Card className="p-6">
-            <h2 className="font-semibold text-zinc-900 dark:text-white mb-4">Your Name</h2>
-            <Input
-              label="Display Name"
-              type="text"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="What should we call you?"
-            />
-          </Card>
+        <FieldSection label="Your name">
+          <input
+            type="text"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            placeholder="What should we call you?"
+            className={inputClass}
+          />
+        </FieldSection>
 
-          {/* Location */}
-          <Card className="p-6">
-            <h2 className="font-semibold text-zinc-900 dark:text-white mb-4">Location</h2>
-            <Select
-              options={[...COUNTRY_OPTIONS]}
-              value={country}
-              onChange={(e) => setCountry(e.target.value)}
-              placeholder="Select your country"
-            />
-          </Card>
+        <FieldSection label="Location">
+          <select
+            value={country}
+            onChange={(e) => setCountry(e.target.value)}
+            className={inputClass}
+          >
+            <option value="">Select your country</option>
+            {COUNTRY_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </FieldSection>
 
-          {/* Relationship Type */}
-          <Card className="p-6">
-            <h2 className="font-semibold text-zinc-900 dark:text-white mb-4">Relationship Status</h2>
-            <div className="space-y-3">
-              {RELATIONSHIP_TYPE_OPTIONS.map((option) => (
-                <OptionCard
-                  key={option.value}
-                  label={option.label}
-                  description={option.description}
-                  selected={relationshipType === option.value}
-                  onClick={() => setRelationshipType(option.value as RelationshipType)}
-                />
-              ))}
-            </div>
-          </Card>
+        <FieldSection label="Relationship status">
+          <OptionList
+            options={RELATIONSHIP_TYPE_OPTIONS.map((o) => ({
+              value: o.value,
+              label: o.label,
+              description: o.description,
+            }))}
+            selected={relationshipType}
+            onSelect={(v) => setRelationshipType(v as RelationshipType)}
+          />
+        </FieldSection>
 
-          {/* Stage */}
-          <Card className="p-6">
-            <h2 className="font-semibold text-zinc-900 dark:text-white mb-4">Where are you in the process?</h2>
-            <div className="space-y-3">
-              {STAGE_OPTIONS.map((option) => (
-                <OptionCard
-                  key={option.value}
-                  label={option.label}
-                  description={option.description}
-                  selected={stage === option.value}
-                  onClick={() => setStage(option.value as Stage)}
-                />
-              ))}
-            </div>
-          </Card>
+        <FieldSection label="Where you are in the process">
+          <OptionList
+            options={STAGE_OPTIONS.map((o) => ({
+              value: o.value,
+              label: o.label,
+              description: o.description,
+            }))}
+            selected={stage}
+            onSelect={(v) => setStage(v as Stage)}
+          />
+        </FieldSection>
 
-          {/* Priorities */}
-          <Card className="p-6">
-            <h2 className="font-semibold text-zinc-900 dark:text-white mb-4">Your Priorities</h2>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">Select all that apply</p>
-            <div className="space-y-3">
-              {PRIORITY_OPTIONS.map((option) => (
-                <OptionCard
-                  key={option.value}
-                  label={option.label}
-                  description={option.description}
-                  selected={priorities.includes(option.value as Priority)}
-                  onClick={() => togglePriority(option.value as Priority)}
-                  type="checkbox"
-                />
-              ))}
-            </div>
-          </Card>
+        <FieldSection label="Your priorities" description="Pick as many as apply.">
+          <OptionList
+            options={PRIORITY_OPTIONS.map((o) => ({
+              value: o.value,
+              label: o.label,
+              description: o.description,
+            }))}
+            selected={priorities}
+            onSelect={(v) => togglePriority(v as Priority)}
+            multi
+          />
+        </FieldSection>
 
-          {/* Children */}
-          <Card className="p-6">
-            <h2 className="font-semibold text-zinc-900 dark:text-white mb-4">Children</h2>
-            <div className="space-y-3">
-              <OptionCard
-                label="Yes, I have children"
-                selected={hasChildren === true}
-                onClick={() => setHasChildren(true)}
-              />
-              <OptionCard
-                label="No children"
-                selected={hasChildren === false}
-                onClick={() => setHasChildren(false)}
-              />
-            </div>
-
-            {hasChildren && (
-              <div className="space-y-4 mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-700">
-                <Input
-                  label="How many children?"
+        <FieldSection label="Children">
+          <OptionList
+            options={[
+              { value: 'yes', label: 'Yes, I have children' },
+              { value: 'no', label: 'No children' },
+            ]}
+            selected={hasChildren === true ? 'yes' : hasChildren === false ? 'no' : ''}
+            onSelect={(v) => setHasChildren(v === 'yes')}
+          />
+          {hasChildren && (
+            <div className="mt-6 space-y-5">
+              <div>
+                <label className="block text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500 mb-2">
+                  How many
+                </label>
+                <input
                   type="number"
                   min={1}
                   max={20}
@@ -294,99 +280,209 @@ export default function ProfilePage() {
                     setChildrenCount(val ? parseInt(val, 10) : null);
                   }}
                   placeholder="Enter number"
+                  className={inputClass}
                 />
-                <Input
-                  label="What are their ages? (optional)"
+              </div>
+              <div>
+                <label className="block text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500 mb-2">
+                  Ages (optional)
+                </label>
+                <input
                   type="text"
                   value={childrenAges}
                   onChange={(e) => setChildrenAges(e.target.value)}
-                  placeholder="e.g., 5, 8, 12"
+                  placeholder="e.g. 5, 8, 12"
+                  className={inputClass}
                 />
               </div>
+            </div>
+          )}
+        </FieldSection>
+
+        {(error || success) && (
+          <section className="max-w-3xl mx-auto pt-6">
+            {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+            {success && (
+              <p className="text-sm text-emerald-700 dark:text-emerald-400">{success}</p>
             )}
-          </Card>
+          </section>
+        )}
 
-          {/* Messages */}
-          {error && (
-            <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm">
-              {error}
-            </div>
-          )}
-
-          {success && (
-            <div className="p-3 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 text-sm">
-              {success}
-            </div>
-          )}
-
-          {/* Actions */}
-          <div className="flex gap-4">
-            <Button onClick={handleSave} isLoading={isSaving} className="flex-1">
-              Save Changes
-            </Button>
-            <Link href="/dashboard">
-              <Button variant="outline">Cancel</Button>
+        <section className="max-w-3xl mx-auto py-10 border-t border-zinc-200 dark:border-zinc-900">
+          <div className="flex items-center gap-5 text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500">
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="text-zinc-900 dark:text-zinc-100 border-b border-zinc-900 dark:border-zinc-100 pb-0.5 disabled:opacity-50"
+            >
+              {isSaving ? 'Saving…' : 'Save changes'}
+            </button>
+            <Link
+              href="/dashboard"
+              className="hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors"
+            >
+              Cancel
             </Link>
           </div>
+        </section>
 
-          {/* Account Management */}
-          <div className="pt-8 mt-4 border-t border-zinc-200 dark:border-zinc-800">
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4">Account</h2>
+        <section className="max-w-3xl mx-auto pt-16 pb-6">
+          <h2 className="text-2xl font-semibold tracking-tight">Account</h2>
+        </section>
+
+        <FieldSection label="Change password">
+          <div className="space-y-5">
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="New password (at least 8 characters)"
+              className={inputClass}
+            />
+            <input
+              type="password"
+              value={confirmNewPassword}
+              onChange={(e) => setConfirmNewPassword(e.target.value)}
+              placeholder="Confirm new password"
+              className={inputClass}
+            />
           </div>
-
-          <Card className="p-6">
-            <h2 className="font-semibold text-zinc-900 dark:text-white mb-4">Change Password</h2>
-            <div className="space-y-3">
-              <Input
-                label="New Password"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="At least 8 characters"
-              />
-              <Input
-                label="Confirm New Password"
-                type="password"
-                value={confirmNewPassword}
-                onChange={(e) => setConfirmNewPassword(e.target.value)}
-                placeholder="Confirm new password"
-              />
-              {passwordMessage && (
-                <p className={`text-sm ${passwordMessage.includes('successfully') ? 'text-green-600 dark:text-green-400' : 'text-red-500'}`}>
-                  {passwordMessage}
-                </p>
-              )}
-              <Button size="sm" onClick={handleChangePassword} isLoading={passwordSaving}>
-                Update Password
-              </Button>
-            </div>
-          </Card>
-
-          <Card className="p-6 border-red-200 dark:border-red-900/50">
-            <h2 className="font-semibold text-red-600 dark:text-red-400 mb-2">Delete Account</h2>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
-              This will sign you out. To permanently delete your data, please contact support.
+          {passwordMessage && (
+            <p
+              className={`mt-4 text-sm ${
+                passwordMessage.includes('successfully')
+                  ? 'text-emerald-700 dark:text-emerald-400'
+                  : 'text-red-600 dark:text-red-400'
+              }`}
+            >
+              {passwordMessage}
             </p>
+          )}
+          <div className="mt-6 text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500">
+            <button
+              onClick={handleChangePassword}
+              disabled={passwordSaving}
+              className="text-zinc-900 dark:text-zinc-100 border-b border-zinc-900 dark:border-zinc-100 pb-0.5 disabled:opacity-50"
+            >
+              {passwordSaving ? 'Updating…' : 'Update password'}
+            </button>
+          </div>
+        </FieldSection>
+
+        <section className="max-w-3xl mx-auto py-10 border-t border-zinc-200 dark:border-zinc-900 pb-24">
+          <p className="text-xs uppercase tracking-[0.18em] text-red-600 dark:text-red-400 mb-3">
+            Danger zone
+          </p>
+          <h3 className="text-xl font-semibold tracking-tight">Delete account</h3>
+          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400 max-w-xl leading-relaxed">
+            This signs you out. To permanently delete your data, contact support.
+          </p>
+          <div className="mt-5 text-xs uppercase tracking-[0.18em]">
             {showDeleteConfirm ? (
-              <div className="flex items-center gap-3">
-                <Button size="sm" variant="outline" onClick={handleDeleteAccount} className="border-red-300 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/30">
+              <div className="flex items-center gap-5">
+                <button
+                  onClick={handleDeleteAccount}
+                  className="text-red-600 dark:text-red-400 border-b border-red-600 dark:border-red-400 pb-0.5 hover:text-red-800 dark:hover:text-red-300 transition-colors"
+                >
                   Yes, sign me out
-                </Button>
+                </button>
                 <button
                   onClick={() => setShowDeleteConfirm(false)}
-                  className="text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+                  className="text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors"
                 >
                   Cancel
                 </button>
               </div>
             ) : (
-              <Button size="sm" variant="outline" onClick={() => setShowDeleteConfirm(true)} className="border-red-300 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/30">
-                Delete Account
-              </Button>
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors border-b border-red-600 dark:border-red-400 pb-0.5"
+              >
+                Delete account
+              </button>
             )}
-          </Card>
-        </div>
-      </div>
+          </div>
+        </section>
+      </main>
+
+      <Footer />
     </div>
+  );
+}
+
+function FieldSection({
+  label,
+  description,
+  children,
+}: {
+  label: string;
+  description?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="max-w-3xl mx-auto py-10 border-t border-zinc-200 dark:border-zinc-900">
+      <p className="text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500 mb-2">
+        {label}
+      </p>
+      {description && (
+        <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-6">{description}</p>
+      )}
+      <div className={description ? '' : 'mt-5'}>{children}</div>
+    </section>
+  );
+}
+
+type Option = { value: string; label: string; description?: string };
+
+function OptionList({
+  options,
+  selected,
+  onSelect,
+  multi,
+}: {
+  options: Option[];
+  selected: string | string[];
+  onSelect: (value: string) => void;
+  multi?: boolean;
+}) {
+  const isSelected = (value: string) =>
+    Array.isArray(selected) ? selected.includes(value) : selected === value;
+
+  return (
+    <ul className="border-t border-zinc-200 dark:border-zinc-900">
+      {options.map((o) => (
+        <li key={o.value} className="border-b border-zinc-200 dark:border-zinc-900">
+          <button
+            type="button"
+            onClick={() => onSelect(o.value)}
+            className="w-full text-left flex items-start gap-4 py-4 hover:bg-zinc-100/50 dark:hover:bg-zinc-900/30 -mx-4 px-4 transition-colors"
+          >
+            <span
+              className={`mt-1.5 w-3 h-3 rounded-full border transition-colors shrink-0 ${
+                isSelected(o.value)
+                  ? 'border-zinc-900 dark:border-zinc-100 bg-zinc-900 dark:bg-zinc-100'
+                  : 'border-zinc-300 dark:border-zinc-700'
+              }`}
+              aria-hidden
+            />
+            <span className="min-w-0 flex-1">
+              <span className="block text-base font-medium text-zinc-900 dark:text-zinc-100">
+                {o.label}
+              </span>
+              {o.description && (
+                <span className="block text-sm text-zinc-600 dark:text-zinc-400 mt-0.5">
+                  {o.description}
+                </span>
+              )}
+            </span>
+            {multi && isSelected(o.value) && (
+              <span className="text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500 shrink-0 mt-1">
+                Selected
+              </span>
+            )}
+          </button>
+        </li>
+      ))}
+    </ul>
   );
 }
